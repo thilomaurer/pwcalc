@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extension-pwcalc">
+  <schema path="/org/gnome/shell/extensions/pwcalc/" id="org.gnome.shell.extensions.pwcalc">
+    <key type="s" name="recenturls">
+      <default>''</default>
+      <summary>Recent URLs</summary>
+    </key>
+  </schema>
+</schemalist>
