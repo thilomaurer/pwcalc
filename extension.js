@@ -55,7 +55,7 @@ PasswordCalculator.prototype = {
     this.loadConfig();
     PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
-    this.iconActor = new St.Icon({ icon_name: 'dialog-password',
+    this.iconActor = new St.Icon({ icon_name: 'dialog-password-symbolic',
                                     style_class: 'system-status-icon' });
     this.actor.add_actor(this.iconActor);
 
@@ -64,6 +64,13 @@ PasswordCalculator.prototype = {
     let title = new PopupMenu.PopupMenuItem(_("Password Calculator"), { can_focus:false, reactive: false,  style_class: 'popup-subtitle-menu-item' });
     bottomSection.addMenuItem(title);
    
+    let secretChanged = function(o,e) {
+	let st = self.secretText;
+        let sec = st.get_text();
+	let pwc='';
+	if (sec!="") pwc='\u25cf'; // ● U+25CF BLACK CIRCLE
+	st.clutter_text.set_password_char(pwc);
+    };
     
     let gen = function(o,e) {
         let url = self.urlText.get_text();
@@ -106,8 +113,8 @@ PasswordCalculator.prototype = {
 	    item.connect('selected', Lang.bind(self, self.urlSelected, a[i]));
         }
 	let labeltext;
-        if (a.length==0) labeltext=_("no recent URLs");
-		else labeltext=_("recent URLs");
+        if (a.length==0) labeltext=_("no recent aliases");
+		else labeltext=_("recent aliases");
         self.urlCombo.label.set_text(labeltext);
     };
 
@@ -119,8 +126,8 @@ PasswordCalculator.prototype = {
     };
     
     this.urlText = new St.Entry({
-      name: "URL",
-      hint_text: _("URL"),
+      name: "alias",
+      hint_text: _("alias"),
       track_hover: true,
       can_focus: true,
       style_class: "input"
@@ -130,13 +137,13 @@ PasswordCalculator.prototype = {
     
     this.secretText = new St.Entry({
       name: "secret",
-//      hint_text: _("secret"),
+      hint_text: _("secret"),
       track_hover: true,
       can_focus: true,
       style_class: "input"
     }); 
+    this.secretText.clutter_text.connect('text-changed', secretChanged);
     this.secretText.clutter_text.connect('key-release-event', gen);
-    this.secretText.clutter_text.set_password_char('\u25cf'); // ● U+25CF BLACK CIRCLE
     this.pwdText = new St.Label({style_class: "pwd", can_focus:false});
     bottomSection.actor.add_actor(this.urlText);
     bottomSection.actor.add_actor(this.secretText);

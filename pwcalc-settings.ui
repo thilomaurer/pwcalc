@@ -18,9 +18,24 @@
 		    <object class="GtkTable" id="left-widget">
 		      <property name="visible">True</property>
 		      <property name="can_focus">False</property>
-		      <property name="n_rows">2</property>
+		      <property name="n_rows">3</property>
 		      <property name="n_columns">1</property>
 		      <property name="column_spacing">6</property>
+
+		      <child>
+		        <object class="GtkLabel" id="tree-heading">
+			  <property name="visible">True</property>
+			  <property name="label">recent aliases:</property>
+			  <property name="xalign">0</property>
+		        </object>
+		        <packing>
+		          <property name="x_options">GTK_FILL</property>
+		          <property name="y_options">GTK_SHRINK</property>
+		          <property name="top_attach">1</property>
+		          <property name="bottom_attach">1</property>
+		        </packing>
+               	      </child>
+
 		      <child>
 		        <object class="GtkScrolledWindow" id="tree-scrolledwindow">
 		          <property name="visible">True</property>
@@ -46,8 +61,11 @@
 		        </object>
 		        <packing>
 		          <property name="x_options">GTK_FILL</property>
+		          <property name="top_attach">2</property>
+		          <property name="bottom_attach">2</property>
 		        </packing>
 		      </child>
+
 		      <child>
 		        <object class="GtkToolbar" id="tree-toolbar">
 		          <property name="visible">True</property>
@@ -83,20 +101,22 @@
 		          </child>
 		        </object>
 		        <packing>
-		          <property name="top_attach">1</property>
-		          <property name="bottom_attach">2</property>
+		          <property name="top_attach">3</property>
+		          <property name="bottom_attach">3</property>
 		          <property name="x_options">GTK_FILL</property>
 		          <property name="y_options">GTK_SHRINK</property>
 		        </packing>
 		      </child>
+
+
 		    </object>
 		  </child>
 		  <child>
-          <object class="GtkBox" id="right-widget">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="homogeneous">True</property>
-		  <child>
+                    <object class="GtkBox" id="right-widget">
+                      <property name="visible">True</property>
+                      <property name="can_focus">False</property>
+                      <property name="homogeneous">True</property>
+	              <child>
 				<object class="GtkTable" id="right-widget-table">
 				<property name="visible">True</property>
 				<property name="can_focus">False</property>
@@ -106,12 +126,12 @@
 				<property name="row_spacing">20</property>
 				<property name="margin_left">36</property>
 				</object>
-		  </child>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-          </packing>
-		  </child>
-		</object>
+                      </child>
+                    </object>
+                    <packing>
+                      <property name="expand">True</property>
+                      <property name="fill">True</property>
+                    </packing>
+	 	  </child>
+	</object>
 </interface>

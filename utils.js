@@ -96,6 +96,7 @@ Sha1.f = function(s, x, y, z)  {
   case 2: return (x & y) ^ (x & z) ^ (y & z);  // Maj()
   case 3: return x ^ y ^ z;                    // Parity()
   }
+  return 0;
 };
 
 //
