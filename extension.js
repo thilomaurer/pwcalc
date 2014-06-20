@@ -75,17 +75,23 @@ PasswordCalculator.prototype = {
     let gen = function(o,e) {
         let url = self.urlText.get_text();
         let sec = self.secretText.get_text();
-        let pwd = calculatePassword(sec, url);
-        self.pwdText.set_text(pwd);
-        let symbol = e.get_key_symbol();
-        if (symbol == Clutter.Return) {
-            showMessage("Password Calculator: Password copied to clipboard.");
-            clipboard.set_text(CLIPBOARD_TYPE,pwd);
-            var a=self.recentURL;
-            if (a.indexOf(url)<0) a[a.length]=url;
-            self.recentURL=a;
-            self.menu.actor.hide();
-        }
+	if ((url!="")&&(sec!="")) {
+		let pwd = calculatePassword(sec, url);
+		let len=16;
+		self.pwdText.set_text(pwd[0]+Array(len-1).join("\u00B7")+pwd[len-1]);
+		let symbol = e.get_key_symbol();
+		if (symbol == Clutter.Return) {
+		    showMessage("Password Calculator: Password copied to clipboard.");
+		    clipboard.set_text(CLIPBOARD_TYPE,pwd);
+		    var a=self.recentURL;
+		    if (a.indexOf(url)<0) a[a.length]=url;
+		    a.sort();
+		    self.recentURL=a;
+		    self.menu.actor.hide();
+		}
+	} else {
+        	self.pwdText.set_text(_("your password"));
+	}
     };
     
     var removeDuplicates = function(a) {
@@ -152,14 +158,15 @@ PasswordCalculator.prototype = {
     this.menu.addMenuItem(bottomSection);
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());    
     this.menu.addMenuItem(this.urlCombo);
+
     
 	let item = new PopupMenu.PopupMenuItem(_("Settings"));
 	item.connect('activate', Lang.bind(this, this._onPreferencesActivate));
 	this.menu.addMenuItem(item);
    
-    this.menu.connect('open-state-changed', function() {
+    this.menu.connect('open-state-changed', function(sender,open) {
         clear();
-        self.urlText.clutter_text.grab_key_focus();
+	if (!open) self.urlText.clutter_text.grab_key_focus();
     });
 
     updateRecentURL();    

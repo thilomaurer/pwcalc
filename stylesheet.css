@@ -1,7 +1,8 @@
 .pwCalc .pwd {
-    font-family: "Courier New", Courier, monospace;
+    font-family: monospace;
     padding-top: 10px;
     text-align: center;
+    font-size: 127%;
 }
 
 .pwCalc {

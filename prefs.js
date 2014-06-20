@@ -26,6 +26,8 @@
  */
 
 const Gtk = imports.gi.Gtk;
+const Gdk = imports.gi.Gdk;
+const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const Lang = imports.lang;
 
@@ -71,7 +73,6 @@ function _createBoolSetting(setting) {
 function init() {
   let schema = 'org.gnome.shell.extensions.pwcalc';
   settings = Convenience.getSettings(schema);
-
   boolSettings = {};
 }
 
@@ -85,55 +86,105 @@ function buildPrefsWidget() {
     this.liststore = this.Window.get_object("liststore");
     this.Iter = this.liststore.get_iter_first();
     this.selectedItem = null;
-    
-    var updateListStore = function() {
+
+    var updateListStore = function(aliases) {
     	if(typeof self.liststore != "undefined") self.liststore.clear();
     	let current = self.liststore.get_iter_first();
-	    for(let i in self.recentURL)
+	    for(let i in aliases)
 	    {
         	current = self.liststore.append();
-        	self.liststore.set_value(current, 0, recentURL[i]);
+        	self.liststore.set_value(current, 0, aliases[i]);
 	    }
     }
     
-    var removeSelectedItem = function() {
-	    var ac = self.selectedItem;
-	    if (ac==null) return;
-	    var l=self.recentURL;
-	    let textDialog = _("Remove %s ?").replace("%s",l[ac]);
-	    let dialog = new Gtk.Dialog({title : ""});
-	    let label = new Gtk.Label({label : textDialog});
-	    label.margin_bottom = 12;
+	var removeSelectedItem = function() {
+		var ac = self.selectedItem;
+		if (ac==null) return;
+		var l=getrecentURL();
+		let textDialog = _("Remove %s ?").replace("%s",l[ac]);
+		let dialog = new Gtk.Dialog({title : ""});
+		let label = new Gtk.Label({label : textDialog});
+		label.margin_bottom = 12;
 
-	    dialog.set_border_width(12);
-	    dialog.set_modal(1);
-	    dialog.set_resizable(0);
-	    //dialog.set_transient_for(***** Need parent Window *****);
+		dialog.set_border_width(12);
+		dialog.set_modal(1);
+		dialog.set_resizable(0);
+		//dialog.set_transient_for(***** Need parent Window *****);
 
-	    dialog.add_button(Gtk.STOCK_NO, 0);
-	    let d = dialog.add_button(Gtk.STOCK_YES, 1);
+		dialog.add_button(Gtk.STOCK_NO, 0);
+		let d = dialog.add_button(Gtk.STOCK_YES, 1);
 
-	    d.set_can_default(true);
-	    dialog.set_default(d);
+		d.set_can_default(true);
+		dialog.set_default(d);
 
-	    let dialog_area = dialog.get_content_area();
-	    dialog_area.pack_start(label,0,0,0);
+		let dialog_area = dialog.get_content_area();
+		dialog_area.pack_start(label,0,0,0);
+		dialog.connect("response",function(w, response_id)
+		{
+			if(response_id) {
+				l.splice(ac,1);
+				setrecentURL(l);
+				updateListStore(l);
+			}
+			dialog.hide();
+		});
+
+		dialog.show_all();
+	}
+
+    var addItemUsingInputBox = function() {
+        let textDialog = _("New alias");
+        let dialog = new Gtk.Dialog({title : ""});
+        let entry = new Gtk.Entry();
+        entry.margin_top = 12;
+        entry.margin_bottom = 12;
+        let label = new Gtk.Label({label : textDialog});
+
+        dialog.set_border_width(12);
+        dialog.set_modal(1);
+        dialog.set_resizable(0);
+        //dialog.set_transient_for(***** Need parent Window *****);
+
+        dialog.add_button(Gtk.STOCK_CANCEL, 0);
+        let d = dialog.add_button(Gtk.STOCK_OK, 1);
+
+        d.set_can_default(true);
+        d.sensitive = 0;
+        let testAlias = function(location) {
+	        d.sensitive = 0;
+                if (entry.get_text()) d.sensitive = 1;
+        	return 0;
+        };
+
+        entry.connect("changed",testAlias);
+
+        dialog.set_default(d);
+        entry.activates_default = true;
+
+        let dialog_area = dialog.get_content_area();
+        dialog_area.pack_start(label,0,0,0);
+        dialog_area.pack_start(entry,0,0,0);
         dialog.connect("response",function(w, response_id)
         {
-           	if(response_id)
-	            l.splice(ac,1);
-	            self.recentURL=l;
-	            setrecentURL(l);
-                dialog.hide();
-                updateListStore();
+		let alias = entry.get_text();
+		        if(response_id && alias)
+		        {
+				var l=getrecentURL();
+				l.push(alias);
+				l.sort();
+				setrecentURL(l);
+				updateListStore(l);
+			}
+		dialog.destroy();
+		return 0;
         });
 
-	    dialog.show_all();
-    }
+        dialog.show_all();
+    };
 
     this.Window.get_object("tree-toolbutton-add").connect("clicked",function()
     {
-	    //addItemUsingInputBox();
+	    addItemUsingInputBox();
     });
 
     this.Window.get_object("tree-toolbutton-remove").connect("clicked",function()
@@ -141,12 +192,27 @@ function buildPrefsWidget() {
 	    removeSelectedItem();
     });
 
+    this.Window.get_object("tree-toolbutton-export").connect("clicked",function()
+    {
+	let l=self.recentURL;
+	let ex=JSON.stringify(l);
+	let c=Gtk.Clipboard.get(Gdk.atom_intern('SELECTION_CLIPBOARD',true));
+	c.set_text("dfjdsfjl",-1);
+    });
+
+    this.treeview.connect("key-press-event",function(sender,event)
+    {
+		if (event.keyval==Gdk.KEY_Delete) removeSelectedItem();
+    });
+
+
     this.Window.get_object("treeview-selection").connect("changed",function(select)
     {
     	let a = select.get_selected_rows(this.liststore)[0][0];
+	let sens=(a!=null);
 
-		if(typeof a != "undefined")
-			self.selectedItem = parseInt(a.to_string());
+	if (sens) self.selectedItem = parseInt(a.to_string());
+	self.Window.get_object("tree-toolbutton-remove").sensitive = sens
     });
 
     this.treeview.set_model(this.liststore);
@@ -186,12 +252,24 @@ function buildPrefsWidget() {
 		settings.set_string(RECENT_URL_KEY,js);
 	}
 
-	this.recentURL=getrecentURL();
-   	this.Window.get_object("tree-toolbutton-remove").sensitive = Boolean(this.recentURL.length);
-   	this.Window.get_object("tree-toolbutton-add").sensitive = false;
+   	this.Window.get_object("tree-toolbutton-remove").sensitive = false;
+   	//this.Window.get_object("tree-toolbutton-add").sensitive = true;
 
-	updateListStore();
+
+	var settings = Convenience.getSettings();
+	settings.connect("changed", function(sender, key) {
+		updateListStore(getrecentURL());	
+	});
+
+	updateListStore(getrecentURL());
 
 	this.MainWidget.show_all();
 	return MainWidget;
 }
+/*
+buildPrefsWidget.prototype={
+	get recentURL: function () { return this.a + 1; },
+	set recentURL: function (x) { this._recentURL=x; this.updateListStore(); }
+};
+*/
+
