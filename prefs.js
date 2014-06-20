@@ -101,7 +101,7 @@ function buildPrefsWidget() {
 		var ac = self.selectedItem;
 		if (ac==null) return;
 		var l=getrecentURL();
-		let textDialog = _("Remove %s ?").replace("%s",l[ac]);
+		let textDialog = _("Remove Alias '%s' ?").replace("%s",l[ac]);
 		let dialog = new Gtk.Dialog({title : ""});
 		let label = new Gtk.Label({label : textDialog});
 		label.margin_bottom = 12;
@@ -111,8 +111,8 @@ function buildPrefsWidget() {
 		dialog.set_resizable(0);
 		//dialog.set_transient_for(***** Need parent Window *****);
 
-		dialog.add_button(Gtk.STOCK_NO, 0);
-		let d = dialog.add_button(Gtk.STOCK_YES, 1);
+		dialog.add_button(Gtk.STOCK_CANCEL, 0);
+		let d = dialog.add_button(Gtk.STOCK_REMOVE, 1);
 
 		d.set_can_default(true);
 		dialog.set_default(d);
@@ -192,12 +192,61 @@ function buildPrefsWidget() {
 	    removeSelectedItem();
     });
 
+
+    var exportimport=function() {
+
+	let ex=JSON.stringify(getrecentURL());
+
+
+	let bld = new Gtk.Builder();
+	bld.add_from_file(EXTENSIONDIR+"/settings-importexport.ui");
+	let dialog = bld.get_object("dialog");
+	let tb = bld.get_object("textbuffer");
+	let d = bld.get_object("import");
+	let tv = bld.get_object("textview");
+        d.sensitive = 0;
+
+        let textDialog = _("Import / Export");
+        let testAlias = function() {
+		try
+		{
+			var l=JSON.parse(tb.text);
+			d.sensitive = 1;
+		}
+		catch(e)
+		{
+			d.sensitive = 0;
+		}
+        	return 0;
+        };
+
+        tb.connect("changed",testAlias);
+	tb.text=ex;
+
+        dialog.set_default(d);
+
+        dialog.connect("response",function(w, response_id)
+        {
+	        if(response_id)
+	        {		
+			let l=[];
+			try
+			{
+				l=JSON.parse(tb.text);
+			}
+			catch(e) {}
+			setrecentURL(l);
+			updateListStore(l);
+		}
+		dialog.destroy();
+		return 0;
+        });
+        dialog.show_all();
+    }
+
     this.Window.get_object("tree-toolbutton-export").connect("clicked",function()
     {
-	let l=self.recentURL;
-	let ex=JSON.stringify(l);
-	let c=Gtk.Clipboard.get(Gdk.atom_intern('SELECTION_CLIPBOARD',true));
-	c.set_text("dfjdsfjl",-1);
+	exportimport();
     });
 
     this.treeview.connect("key-press-event",function(sender,event)

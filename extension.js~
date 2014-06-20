@@ -78,7 +78,7 @@ PasswordCalculator.prototype = {
 	if ((url!="")&&(sec!="")) {
 		let pwd = calculatePassword(sec, url);
 		let len=16;
-		self.pwdText.set_text(pwd[0]+pwd[1]+pwd[2]+Array(len+1-6).join("\u00B7")+pwd[len-3]+pwd[len-2]+pwd[len-1]);
+		self.pwdText.set_text(pwd[0]+Array(len-1).join("\u00B7")+pwd[len-1]);
 		let symbol = e.get_key_symbol();
 		if (symbol == Clutter.Return) {
 		    showMessage("Password Calculator: Password copied to clipboard.");
