@@ -19,7 +19,11 @@ const Base64 = Me.imports.base64;
 
 let pwCalc, clipboard;
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
+const PRIMARY_TYPE = St.ClipboardType.PRIMARY;
 const RECENT_URL_KEY = 'recenturls';
+const SHOW_COPY_NOTIFICATION_KEY = 'show-copy-notification';
+const COPY_TO_CLIPBOARD_KEY = 'copy-to-clipboard';
+const COPY_TO_PRIMARY_KEY = 'copy-to-primary-selection';
 
 
 function PasswordCalculator() { 
@@ -81,8 +85,9 @@ PasswordCalculator.prototype = {
 		self.pwdText.set_text(pwd[0]+pwd[1]+pwd[2]+Array(len+1-6).join("\u00B7")+pwd[len-3]+pwd[len-2]+pwd[len-1]);
 		let symbol = e.get_key_symbol();
 		if (symbol == Clutter.Return) {
-		    showMessage("Password Calculator: Password copied to clipboard.");
-		    clipboard.set_text(CLIPBOARD_TYPE,pwd);
+		    if (self.ShowCopyNotification) showMessage("Password Calculator: Password copied to clipboard.");
+		    if (self.CopyToClipboard) clipboard.set_text(CLIPBOARD_TYPE,pwd);
+		    if (self.CopyToPrimarySelection) clipboard.set_text(PRIMARY_TYPE,pwd);
 		    var a=self.recentURL;
 		    if (a.indexOf(url)<0) a[a.length]=url;
 		    a.sort();
@@ -216,6 +221,20 @@ PasswordCalculator.prototype = {
     	//global.log("set:" +js);
 		if(!this._settings) this.loadConfig();
     	this._settings.set_string(RECENT_URL_KEY,js);
+	},
+        getBool: function(key) 
+        { 
+		var settings = Convenience.getSettings();
+	        return settings.get_boolean(key); 
+        },
+	get ShowCopyNotification() {
+		return this.getBool(SHOW_COPY_NOTIFICATION_KEY);
+	},
+	get CopyToClipboard() {
+		return this.getBool(COPY_TO_CLIPBOARD_KEY);
+	},
+	get CopyToPrimarySelection() {
+		return this.getBool(COPY_TO_PRIMARY_KEY);
 	}
 }
 

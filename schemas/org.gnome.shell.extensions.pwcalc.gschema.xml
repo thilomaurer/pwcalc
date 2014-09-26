@@ -5,5 +5,17 @@
       <default>''</default>
       <summary>Recent URLs</summary>
     </key>
+    <key type="b" name="show-copy-notification">
+      <default>true</default>
+      <summary>Show Copy Notification</summary>
+    </key>
+    <key type="b" name="copy-to-clipboard">
+      <default>true</default>
+      <summary>Copy to Clipboard</summary>
+    </key>
+    <key type="b" name="copy-to-primary-selection">
+      <default>false</default>
+      <summary>Copy to Primary Selection</summary>
+    </key>
   </schema>
 </schemalist>

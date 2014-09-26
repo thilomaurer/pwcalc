@@ -40,6 +40,9 @@ const Convenience = Me.imports.convenience;
 const EXTENSIONDIR = Me.dir.get_path();
 
 const RECENT_URL_KEY = 'recenturls';
+const SHOW_COPY_NOTIFICATION_KEY = 'show-copy-notification';
+const COPY_TO_CLIPBOARD_KEY = 'copy-to-clipboard';
+const COPY_TO_PRIMARY_KEY = 'copy-to-primary-selection';
 
 let settings;
 let boolSettings;
@@ -292,17 +295,37 @@ function buildPrefsWidget() {
 			obj=[];
 		}
 	    return obj;
-	}
+	};
 
 	var setrecentURL=function(v)
 	{
 		var js=JSON.stringify(v);
 		var settings = Convenience.getSettings();
 		settings.set_string(RECENT_URL_KEY,js);
-	}
+	};
+
+        var getBool=function(key) 
+        { 
+		var settings = Convenience.getSettings();
+	        return settings.get_boolean(key); 
+        };
+ 
+        var setBool=function(key,v) 
+        { 
+		var settings = Convenience.getSettings();
+	        settings.set_boolean(key,v); 
+        };
 
    	this.Window.get_object("tree-toolbutton-remove").sensitive = false;
-   	//this.Window.get_object("tree-toolbutton-add").sensitive = true;
+
+	var bool2switch=function(objectkey,settingskey) {
+		var s=self.Window.get_object(objectkey);
+		s.active=getBool(settingskey);
+		s.connect("notify::active",function(){ setBool(settingskey,arguments[0].active);});
+	};
+	bool2switch("show-notification-switch",SHOW_COPY_NOTIFICATION_KEY);
+	bool2switch("copy-to-clipboard-switch",COPY_TO_CLIPBOARD_KEY);
+	bool2switch("copy-to-primary-switch",COPY_TO_PRIMARY_KEY);
 
 
 	var settings = Convenience.getSettings();
