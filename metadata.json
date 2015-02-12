@@ -1,5 +1,5 @@
 {
-	"shell-version": ["3.10","3.12"], 
+	"shell-version": ["3.10","3.12","3.14"], 
 	"uuid": "pwcalc@thilomaurer.de", 
 	"name": "Password Calculator", 
 	"description": "Calculate passwords from url and secret",
