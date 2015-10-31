@@ -65,8 +65,7 @@ PasswordCalculator.prototype = {
 
     // Bottom section
     let bottomSection = new PopupMenu.PopupMenuSection();
-    let title = new PopupMenu.PopupMenuItem(_("Password Calculator"), { can_focus:false, reactive: false,  style_class: 'popup-subtitle-menu-item' });
-    bottomSection.addMenuItem(title);
+    this.headingLabel = new St.Label({ text:_("Password Calculator"), style_class: "heading", can_focus:false });
    
     let secretChanged = function(o,e) {
 	let st = self.secretText;
@@ -137,25 +136,26 @@ PasswordCalculator.prototype = {
     };
     
     this.urlText = new St.Entry({
-      name: "alias",
+      name: "searchEntry",
       hint_text: _("alias"),
       track_hover: true,
       can_focus: true,
-      style_class: "input"
+      style_class: "search-entry first"
     });
 
     this.urlText.clutter_text.connect('key-release-event', gen);
     
     this.secretText = new St.Entry({
-      name: "secret",
+      name: "searchEntry",
       hint_text: _("secret"),
       track_hover: true,
       can_focus: true,
-      style_class: "input"
+      style_class: "search-entry last"
     }); 
     this.secretText.clutter_text.connect('text-changed', secretChanged);
     this.secretText.clutter_text.connect('key-release-event', gen);
     this.pwdText = new St.Label({style_class: "pwd", can_focus:false});
+    bottomSection.actor.add_actor(this.headingLabel);
     bottomSection.actor.add_actor(this.urlText);
     bottomSection.actor.add_actor(this.secretText);
     bottomSection.actor.add_actor(this.pwdText);

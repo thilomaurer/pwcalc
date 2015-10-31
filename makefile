@@ -1,7 +1,11 @@
+INSTALLPATH=~/.local/share/gnome-shell/extensions/pwcalc@thilomaurer.de
+TARGET=pwcalc.zip
+
 release:
-	rm -f pwcalc.zip
-	zip -r pwcalc.zip *
+	rm -f $(TARGET)
+	zip -r $(TARGET) *
 
 localinstall:
-	cp -r * ~/.local/share/gnome-shell/extensions/pwcalc@thilomaurer.de
+	mkdir -p $(INSTALLPATH)
+	cp -r * $(INSTALLPATH)
 
