@@ -84,9 +84,14 @@ PasswordCalculator.prototype = {
 		self.pwdText.set_text(pwd[0]+pwd[1]+pwd[2]+Array(len+1-6).join("\u00B7")+pwd[len-3]+pwd[len-2]+pwd[len-1]);
 		let symbol = e.get_key_symbol();
 		if (symbol == Clutter.Return) {
-		    if (self.ShowCopyNotification) showMessage("Password Calculator: Password copied to clipboard.");
-		    if (self.CopyToClipboard) clipboard.set_text(CLIPBOARD_TYPE,pwd);
-		    if (self.CopyToPrimarySelection) clipboard.set_text(PRIMARY_TYPE,pwd);
+		    if (self.CopyToClipboard) {
+			clipboard.set_text(CLIPBOARD_TYPE,pwd);
+		         if (self.ShowCopyNotification) showMessage("Password Calculator: Password copied to clipboard.");
+		    }
+		    if (self.CopyToPrimarySelection) {
+			clipboard.set_text(PRIMARY_TYPE,pwd);
+			if (self.ShowCopyNotification) showMessage("Password Calculator: Password copied to primary selection.");
+		    }
 		    var a=self.recentURL;
 		    if (a.indexOf(url)<0) a[a.length]=url;
 		    a.sort();
