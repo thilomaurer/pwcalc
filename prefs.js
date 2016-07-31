@@ -195,25 +195,20 @@ function buildPrefsWidget() {
 	    removeSelectedItem();
     });
 
-
     var exportimport=function() {
-
-	let ex=JSON.stringify(getrecentURL());
-
 
 	let bld = new Gtk.Builder();
 	bld.add_from_file(EXTENSIONDIR+"/settings-importexport.ui");
 	let dialog = bld.get_object("dialog");
 	let tb = bld.get_object("textbuffer");
 	let d = bld.get_object("import");
-	let tv = bld.get_object("textview");
-        d.sensitive = 0;
-
-        let textDialog = _("Import / Export");
-        let testAlias = function() {
+	let cancel = bld.get_object("cancel");
+	d.sensitive = 0;
+	let newRecentURL;
+	let testAlias = function() {
 		try
 		{
-			var l=JSON.parse(tb.text);
+			newRecentURL=JSON.parse(tb.text);
 			d.sensitive = 1;
 		}
 		catch(e)
@@ -224,27 +219,21 @@ function buildPrefsWidget() {
         };
 
         tb.connect("changed",testAlias);
-	tb.text=ex;
+	tb.text=JSON.stringify(getrecentURL());
 
-        dialog.set_default(d);
+        dialog.set_default(cancel);
 
         dialog.connect("response",function(w, response_id)
         {
-	        if(response_id)
+	        if (response_id==1)
 	        {		
-			let l=[];
-			try
-			{
-				l=JSON.parse(tb.text);
-			}
-			catch(e) {}
-			setrecentURL(l);
-			updateListStore(l);
+			setrecentURL(newRecentURL);
+			updateListStore(newRecentURL);
 		}
 		dialog.destroy();
 		return 0;
         });
-        dialog.show_all();
+        dialog.run();
     }
 
     this.Window.get_object("tree-toolbutton-export").connect("clicked",function()
@@ -256,7 +245,6 @@ function buildPrefsWidget() {
     {
 		if (event.keyval==Gdk.KEY_Delete) removeSelectedItem();
     });
-
 
     this.Window.get_object("treeview-selection").connect("changed",function(select)
     {
@@ -338,10 +326,3 @@ function buildPrefsWidget() {
 	this.MainWidget.show_all();
 	return MainWidget;
 }
-/*
-buildPrefsWidget.prototype={
-	get recentURL: function () { return this.a + 1; },
-	set recentURL: function (x) { this._recentURL=x; this.updateListStore(); }
-};
-*/
-

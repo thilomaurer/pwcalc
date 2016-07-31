@@ -18,9 +18,9 @@
     <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkBox" id="main-widget">
+    <property name="height_request">600</property>
     <property name="can_focus">False</property>
-    <property name="border_width">14</property>
-    <property name="spacing">14</property>
+    <property name="border_width">5</property>
     <child>
       <object class="GtkPaned" id="paned1">
         <property name="visible">True</property>
@@ -139,6 +139,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="hexpand">True</property>
+                <property name="spacing">10</property>
                 <child>
                   <object class="GtkLabel" id="label1">
                     <property name="visible">True</property>
@@ -174,6 +175,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="hexpand">True</property>
+                <property name="spacing">10</property>
                 <child>
                   <object class="GtkLabel" id="label3">
                     <property name="visible">True</property>
@@ -209,6 +211,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="hexpand">True</property>
+                <property name="spacing">10</property>
                 <child>
                   <object class="GtkLabel" id="label4">
                     <property name="visible">True</property>
@@ -256,7 +259,7 @@
             </child>
           </object>
           <packing>
-            <property name="resize">True</property>
+            <property name="resize">False</property>
             <property name="shrink">True</property>
           </packing>
         </child>
