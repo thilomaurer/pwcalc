@@ -43,62 +43,38 @@ const RECENT_URL_KEY = 'recenturls';
 const SHOW_COPY_NOTIFICATION_KEY = 'show-copy-notification';
 const COPY_TO_CLIPBOARD_KEY = 'copy-to-clipboard';
 const COPY_TO_PRIMARY_KEY = 'copy-to-primary-selection';
-
-let settings;
-let boolSettings;
-
-function _createBoolSetting(setting) {
-  let hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-
-  let settingLabel = new Gtk.Label({label: boolSettings[setting].label,
-                                    xalign: 0});
-
-  let settingSwitch = new Gtk.Switch({active: settings.get_boolean(setting)});
-  settingSwitch.connect('notify::active', function(button) {
-    settings.set_boolean(setting, button.active);
-  });
-
-  if (boolSettings[setting].help) {
-    settingLabel.set_tooltip_text(boolSettings[setting].help);
-    settingSwitch.set_tooltip_text(boolSettings[setting].help);
-  }
-
-  hbox.pack_start(settingLabel, true, true, 0);
-  hbox.add(settingSwitch);
-
-  return hbox;
-}
+const KEEP_COPY_OF_ALIASES_IN_FILE_KEY = 'keep-copy-of-aliases-in-file';
+const KEEP_COPY_OF_ALIASES_FILENAME_KEY = 'keep-copy-of-aliases-filename';
+const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
 
 /*
    Shell-extensions handlers
 */
 
 function init() {
-  let schema = 'org.gnome.shell.extensions.pwcalc';
-  settings = Convenience.getSettings(schema);
-  boolSettings = {};
 }
 
 function buildPrefsWidget() {
-    var self=this;
+	var self=this;
+	
+	var settings = Convenience.getSettings();
+	
+	this.Builder = new Gtk.Builder();
+	this.Builder.add_from_file(EXTENSIONDIR+"/pwcalc-settings.ui");
+	this.MainWidget = Builder.get_object("main-widget");
+	this.treeview = this.Builder.get_object("tree-treeview");
+	this.liststore = this.Builder.get_object("liststore");
+	this.Iter = this.liststore.get_iter_first();
+	this.selectedItem = null;
 
-	this.Window = new Gtk.Builder();
-	this.Window.add_from_file(EXTENSIONDIR+"/pwcalc-settings.ui");
-    this.MainWidget = Window.get_object("main-widget");
-    this.treeview = this.Window.get_object("tree-treeview");
-    this.liststore = this.Window.get_object("liststore");
-    this.Iter = this.liststore.get_iter_first();
-    this.selectedItem = null;
-
-    var updateListStore = function(aliases) {
-    	if(typeof self.liststore != "undefined") self.liststore.clear();
-    	let current = self.liststore.get_iter_first();
-	    for(let i in aliases)
-	    {
-        	current = self.liststore.append();
-        	self.liststore.set_value(current, 0, aliases[i]);
-	    }
-    }
+	var updateListStore = function(aliases) {
+	if(typeof self.liststore != "undefined") self.liststore.clear();
+		let current = self.liststore.get_iter_first();
+		for(let i in aliases) {
+			current = self.liststore.append();
+			self.liststore.set_value(current, 0, aliases[i]);
+		}
+	}
     
 	var removeSelectedItem = function() {
 		var ac = self.selectedItem;
@@ -112,19 +88,19 @@ function buildPrefsWidget() {
 		dialog.set_border_width(12);
 		dialog.set_modal(1);
 		dialog.set_resizable(0);
-		//dialog.set_transient_for(***** Need parent Window *****);
+        	dialog.set_transient_for(self.MainWidget.get_toplevel());
 
-		dialog.add_button(Gtk.STOCK_CANCEL, 0);
-		let d = dialog.add_button(Gtk.STOCK_REMOVE, 1);
+		let cancelbutton = dialog.add_button(Gtk.STOCK_CANCEL, 0);
+		let removebuton = dialog.add_button(Gtk.STOCK_REMOVE, 1);
 
-		d.set_can_default(true);
-		dialog.set_default(d);
+		cancelbutton.set_can_default(true);
+		dialog.set_default(cancelbutton);
 
 		let dialog_area = dialog.get_content_area();
 		dialog_area.pack_start(label,0,0,0);
 		dialog.connect("response",function(w, response_id)
 		{
-			if(response_id) {
+			if(response_id==1) {
 				l.splice(ac,1);
 				setrecentURL(l);
 				updateListStore(l);
@@ -146,7 +122,7 @@ function buildPrefsWidget() {
         dialog.set_border_width(12);
         dialog.set_modal(1);
         dialog.set_resizable(0);
-        //dialog.set_transient_for(***** Need parent Window *****);
+        dialog.set_transient_for(self.MainWidget.get_toplevel());
 
         dialog.add_button(Gtk.STOCK_CANCEL, 0);
         let d = dialog.add_button(Gtk.STOCK_OK, 1);
@@ -170,7 +146,7 @@ function buildPrefsWidget() {
         dialog.connect("response",function(w, response_id)
         {
 		let alias = entry.get_text();
-		        if(response_id && alias)
+		        if(response_id == 1 && alias)
 		        {
 				var l=getrecentURL();
 				l.push(alias);
@@ -185,12 +161,12 @@ function buildPrefsWidget() {
         dialog.show_all();
     };
 
-    this.Window.get_object("tree-toolbutton-add").connect("clicked",function()
+    this.Builder.get_object("tree-toolbutton-add").connect("clicked",function()
     {
 	    addItemUsingInputBox();
     });
 
-    this.Window.get_object("tree-toolbutton-remove").connect("clicked",function()
+    this.Builder.get_object("tree-toolbutton-remove").connect("clicked",function()
     {
 	    removeSelectedItem();
     });
@@ -222,6 +198,7 @@ function buildPrefsWidget() {
 	tb.text=JSON.stringify(getrecentURL());
 
         dialog.set_default(cancel);
+        dialog.set_transient_for(self.MainWidget.get_toplevel());
 
         dialog.connect("response",function(w, response_id)
         {
@@ -236,7 +213,7 @@ function buildPrefsWidget() {
         dialog.run();
     }
 
-    this.Window.get_object("tree-toolbutton-export").connect("clicked",function()
+    this.Builder.get_object("tree-toolbutton-export").connect("clicked",function()
     {
 	exportimport();
     });
@@ -246,13 +223,13 @@ function buildPrefsWidget() {
 		if (event.keyval==Gdk.KEY_Delete) removeSelectedItem();
     });
 
-    this.Window.get_object("treeview-selection").connect("changed",function(select)
+    this.Builder.get_object("treeview-selection").connect("changed",function(select)
     {
     	let a = select.get_selected_rows(this.liststore)[0][0];
 	let sens=(a!=null);
 
 	if (sens) self.selectedItem = parseInt(a.to_string());
-	self.Window.get_object("tree-toolbutton-remove").sensitive = sens
+	self.Builder.get_object("tree-toolbutton-remove").sensitive = sens
     });
 
     this.treeview.set_model(this.liststore);
@@ -269,10 +246,8 @@ function buildPrefsWidget() {
     
 	if(typeof this.liststore != "undefined") this.liststore.clear();
 	
-	var getrecentURL=function()
-	{
-		var settings = Convenience.getSettings();
-		var js=settings.get_string(RECENT_URL_KEY);
+	var getrecentURL=function() {
+		var js=getString(RECENT_URL_KEY);
 		var obj;
 		try
 		{
@@ -285,40 +260,92 @@ function buildPrefsWidget() {
 	    return obj;
 	};
 
-	var setrecentURL=function(v)
-	{
+	var setrecentURL=function(v) {
 		var js=JSON.stringify(v);
-		var settings = Convenience.getSettings();
-		settings.set_string(RECENT_URL_KEY,js);
+		setString(RECENT_URL_KEY,js);
 	};
 
-        var getBool=function(key) 
-        { 
-		var settings = Convenience.getSettings();
+        var getBool=function(key) { 
 	        return settings.get_boolean(key); 
         };
- 
-        var setBool=function(key,v) 
-        { 
-		var settings = Convenience.getSettings();
+        
+        var setBool=function(key,v) { 
 	        settings.set_boolean(key,v); 
         };
+        
+	var getInteger=function(key) { 
+	        return settings.get_int(key); 
+        };
+        
+        var setInteger=function(key,v) { 
+	        settings.set_int(key,v); 
+        };
+	
+	var getString=function(key) { 
+	        return settings.get_string(key); 
+        };
+        
+	var setString=function(key,v) {
+		settings.set_string(key,v); 
+        };
+ 
 
-   	this.Window.get_object("tree-toolbutton-remove").sensitive = false;
+   	this.Builder.get_object("tree-toolbutton-remove").sensitive = false;
 
 	var bool2switch=function(objectkey,settingskey) {
-		var s=self.Window.get_object(objectkey);
+		var s=self.Builder.get_object(objectkey);
 		s.active=getBool(settingskey);
-		s.connect("notify::active",function(){ setBool(settingskey,arguments[0].active);});
+		s.connect("notify::active",function() { setBool(settingskey,arguments[0].active); });
 	};
 	bool2switch("show-notification-switch",SHOW_COPY_NOTIFICATION_KEY);
 	bool2switch("copy-to-clipboard-switch",COPY_TO_CLIPBOARD_KEY);
 	bool2switch("copy-to-primary-switch",COPY_TO_PRIMARY_KEY);
+	bool2switch("keep-copy-of-aliases-in-file-switch",KEEP_COPY_OF_ALIASES_IN_FILE_KEY);
+
+	var string2label=function(objectkey,settingskey) {
+		var s=self.Builder.get_object(objectkey);
+		var update = function() {
+			var label=getString(settingskey);
+			if (label=="") label="(none)";
+			s.label=label;
+			s.tooltip_text=label;
+		}
+		settings.connect("changed::"+settingskey, function(sender, key) {
+			update();
+		});
+		update();
+	};
+	string2label("keep-copy-of-aliases-filename-label",KEEP_COPY_OF_ALIASES_FILENAME_KEY);
+
+	var float2spin=function(objectkey,settingskey) {
+		var s=self.Builder.get_object(objectkey);
+		s.value=getInteger(settingskey);
+		s.connect("notify::value",function() { setInteger(settingskey,arguments[0].value); });
+	};
+	float2spin("default-password-length-adjustment",DEFAULT_PASSWORD_LENGTH_KEY);
+
+	self.Builder.get_object("keep-copy-of-aliases-filename-button").connect("clicked",function() {
+		let dialog = new Gtk.FileChooserDialog({
+			title:_("Select Filename to Keep Aliases"),
+			transient_for: self.MainWidget.get_toplevel(),
+			action: Gtk.FileChooserAction.SAVE,
+			do_overwrite_confirmation: true,
+			modal: true
+		});
+		dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL);
+		dialog.add_button(Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT);
+		var res=dialog.run();
+		if (res == Gtk.ResponseType.ACCEPT) {
+			var filename = dialog.get_filename();
+			setString("keep-copy-of-aliases-filename",filename);
+		}
+		dialog.destroy();
+	});
 
 
-	var settings = Convenience.getSettings();
 	settings.connect("changed", function(sender, key) {
-		updateListStore(getrecentURL());	
+		if (key==RECENT_URL_KEY)
+			updateListStore(getrecentURL());	
 	});
 
 	updateListStore(getrecentURL());

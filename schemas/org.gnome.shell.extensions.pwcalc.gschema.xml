@@ -17,5 +17,17 @@
       <default>false</default>
       <summary>Copy to Primary Selection</summary>
     </key>
+    <key type="s" name="keep-copy-of-aliases-filename">
+      <default>''</default>
+      <summary>Filename to Keep Copy of Aliases</summary>
+    </key>
+    <key type="b" name="keep-copy-of-aliases-in-file">
+      <default>false</default>
+      <summary>Keep Copy of Aliases in File</summary>
+    </key>
+    <key type="i" name="default-password-length">
+      <default>16</default>
+      <summary>Default Password Length</summary>
+    </key>
   </schema>
 </schemalist>
