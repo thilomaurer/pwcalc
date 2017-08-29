@@ -1,8 +1,8 @@
 {
-	"shell-version": ["3.10","3.12","3.14","3.16","3.18","3.20"], 
+	"shell-version": ["3.10","3.12","3.14","3.16","3.18","3.20","3.22","3.24"], 
 	"uuid": "pwcalc@thilomaurer.de", 
 	"name": "Password Calculator", 
-	"description": "This app calculates strong passwords for each alias from your single secret.  No need to remember dozens of passwords any longer. No need for a password manager any longer. Full freedom in choosing aliases and secret, e.g. alias: \"username@google.com#2014\" secret: \"saFe⚿in漢字\"  Recent aliases are kept in a easily accessible drop-down.  The formula is as simple as \"[secret][alias]\" → SHA1 → BASE64",
+	"description": "This extension calculates strong passwords for each alias from your single secret. No need to remember dozens of passwords any longer. No need for a password manager any longer. Full freedom in choosing aliases and secret, e.g. alias: \"username@google.com#2014\", secret: \"saFe⚿in漢字\". Recent aliases are kept in a easily accessible drop-down. You may choose between HMAC_SHA1 and SHA1. The formula is as simple as \"[secret][alias]\" → SHA1 → BASE64 ",
 	"settings-schema": "org.gnome.shell.extensions.pwcalc",
 	"url": "https://github.com/thilomaurer/pwcalc"
 }
