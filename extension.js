@@ -27,6 +27,7 @@ const COPY_TO_PRIMARY_KEY = 'copy-to-primary-selection';
 const KEEP_COPY_OF_ALIASES_IN_FILE_KEY = 'keep-copy-of-aliases-in-file';
 const KEEP_COPY_OF_ALIASES_FILENAME_KEY = 'keep-copy-of-aliases-filename';
 const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
+const PASSWORD_METHOD_KEY = 'password-method';
 
 function PasswordCalculator() { 
 	this._init();
@@ -70,13 +71,30 @@ PasswordCalculator.prototype = {
 			if (sec!="") pwc='\u25cf'; // ● U+25CF BLACK CIRCLE
 			st.clutter_text.set_password_char(pwc);
 		};
+		
+		let compat_password_method = function() {
+			let type = self.PasswordMethod;
+			let keys = self.recentURL;
+			if (type=="__compat__") {
+				if (keys.length>0) {
+					self.PasswordMethod = "SHA1";
+					global.log("Password Calculator: Initializing password-method to SHA1 due to preexisting aliases");
+				} else {
+					self.PasswordMethod = "HMAC_SHA1";
+				}
+			}
+		}
+		compat_password_method();
 
 		let gen = function(o,e) {
 			let url = self.urlText.get_text();
 			let sec = self.secretText.get_text();
 			if ((url!="")&&(sec!="")) {
 				let len = self.DefaultPasswordLength;
-				let pwd = calculatePassword(sec, url, len);
+				let type = self.PasswordMethod;
+				let calc = calculatePassword[type];
+				if (calc === undefined) return;
+				let pwd = calc(sec, url, len);
 				let showcount;
 				if (len<=8) showcount=1;
 				else if (len<=16) showcount=3; 
@@ -228,6 +246,10 @@ PasswordCalculator.prototype = {
         { 
 	        return this.settings.get_string(key); 
         },
+        setString: function(key,value) 
+        { 
+	        return this.settings.set_string(key,value); 
+        },
 	get ShowCopyNotification() {
 		return this.getBool(SHOW_COPY_NOTIFICATION_KEY);
 	},
@@ -239,6 +261,12 @@ PasswordCalculator.prototype = {
 	},
 	get DefaultPasswordLength() {
 		return this.getInteger(DEFAULT_PASSWORD_LENGTH_KEY);
+	},
+	get PasswordMethod() {
+		return this.getString(PASSWORD_METHOD_KEY);
+	},
+	set PasswordMethod(v) {
+		return this.setString(PASSWORD_METHOD_KEY,v);
 	},
 	get KeepCopyOfAliasesInFile() {
 		return this.getBool(KEEP_COPY_OF_ALIASES_IN_FILE_KEY);
@@ -256,16 +284,54 @@ function showMessage(text) {
 	source.notify(notification);
 }
    
-function calculatePassword(secret, domain, length) {
-        if (secret==""||domain=="") return "";
-        var sha1 = Utils.Sha1.hash(secret + domain);
-        var array = sha1.match(/.{1,2}/g);
-        var bytes = new Uint8Array(20);
-        for (var i = 0, j = array.length; i < j; i += 1)
-            bytes[i] = parseInt(array[i], 16);
-        var base64 = Base64.base64.encode(String.fromCharCode.apply(null, bytes));
-        return base64.substring(0, length);
-}
+var calculatePassword={
+	SHA1: function(secret, domain, length) {
+		if (secret==""||domain=="") return "";
+		var sha1 = Utils.Sha1.hash(secret + domain);
+		var array = sha1.match(/.{1,2}/g);
+		var bytes = new Uint8Array(20);
+		for (var i = 0, j = array.length; i < j; i += 1)
+		    bytes[i] = parseInt(array[i], 16);
+		var base64 = Base64.base64.encode(String.fromCharCode.apply(null, bytes));
+		return base64.substring(0, length);
+	},
+	HMAC_SHA1: function(secret, domain, length) {
+		if (secret==""||domain=="") return "";
+
+		var FilledArray=function(len,value) {
+			var a=new Uint8Array(len);
+			for (var i=0;i<len;i++)
+				a[i]=value;
+			return a;
+		};
+		var i_key_b = FilledArray(64,0x36);
+		var o_key_b = FilledArray(64,0x5c);
+		var i, j, sha1;
+
+
+		secret = Utils.Utf8.encode(secret);
+		domain = Utils.Utf8.encode(domain);
+
+		if (secret.length > 64)
+			secret = Utils.Sha1.hash(secret, false);
+
+		for (i = 0, j = secret.length; i < j; i += 1) {
+			i_key_b[i] ^= secret.charCodeAt(i);
+			o_key_b[i] ^= secret.charCodeAt(i);
+		}
+
+		sha1 = Utils.Sha1.hash(String.fromCharCode.apply(null, i_key_b) + domain, false);
+		sha1 = Utils.Sha1.hash(String.fromCharCode.apply(null, o_key_b) + sha1, false);
+
+		var array = sha1.match(/.{2}/g);    
+		var bytes = new Uint8Array(20);
+		for (i = 0, j = array.length; i < j; i += 1)
+			bytes[i] = parseInt(array[i], 16);
+		var base64 = Base64.base64.encode(String.fromCharCode.apply(null, bytes));
+		return base64.substring(0, length);
+	}
+};
+
 
 function init(metadata) { 
 	let locales = metadata.path + "/locale";

@@ -29,5 +29,9 @@
       <default>16</default>
       <summary>Default Password Length</summary>
     </key>
+    <key type="s" name="password-method">
+      <default>'__compat__'</default>
+      <summary>Password Method</summary>
+    </key>
   </schema>
 </schemalist>

@@ -46,6 +46,7 @@ const COPY_TO_PRIMARY_KEY = 'copy-to-primary-selection';
 const KEEP_COPY_OF_ALIASES_IN_FILE_KEY = 'keep-copy-of-aliases-in-file';
 const KEEP_COPY_OF_ALIASES_FILENAME_KEY = 'keep-copy-of-aliases-filename';
 const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
+const PASSWORD_METHOD_KEY = 'password-method';
 
 /*
    Shell-extensions handlers
@@ -323,6 +324,21 @@ function buildPrefsWidget() {
 		s.connect("notify::value",function() { setInteger(settingskey,arguments[0].value); });
 	};
 	float2spin("default-password-length-adjustment",DEFAULT_PASSWORD_LENGTH_KEY);
+
+	var string2combo=function(objectkey,settingskey) {
+		var s=self.Builder.get_object(objectkey);
+		s.active_id=getString(settingskey);
+/*
+		s.connect("notify::active_id",function() { 
+			setString(settingskey,arguments[0].active_id);
+		});
+*/
+		s.connect("notify::active",function() { 
+			global.log("active",JSON.stringify(arguments));
+			setString(settingskey,arguments[0].active_id);
+		});
+	};
+	string2combo("password-method-combobox",PASSWORD_METHOD_KEY);
 
 	self.Builder.get_object("keep-copy-of-aliases-filename-button").connect("clicked",function() {
 		let dialog = new Gtk.FileChooserDialog({
