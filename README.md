@@ -11,7 +11,7 @@ This Gnome Shell Extension calculates **strong passwords for each alias from you
 
 Recent aliases are kept in a easily accessible drop-down.
 
-![Password Calcualtor Screenshot](/screenshot.png?raw=true "A screenshot of the Password Calculator extension")
+![Password Calculator Screenshot](/screenshot.png?raw=true "A screenshot of the Password Calculator extension")
 
 You may choose between two (incompatible) hash methods:
 

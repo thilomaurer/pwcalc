@@ -1,3 +1,5 @@
+const version = "1.1.1";
+
 const St = imports.gi.St;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
@@ -28,6 +30,7 @@ const KEEP_COPY_OF_ALIASES_IN_FILE_KEY = 'keep-copy-of-aliases-in-file';
 const KEEP_COPY_OF_ALIASES_FILENAME_KEY = 'keep-copy-of-aliases-filename';
 const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
 const PASSWORD_METHOD_KEY = 'password-method';
+const LAST_VERSION_KEY = 'last-version';
 
 function PasswordCalculator() { 
 	this._init();
@@ -48,14 +51,19 @@ const MyPopupMenuItem = new Lang.Class({
 	}
 });
 
-
-
 PasswordCalculator.prototype = {
 	__proto__: PanelMenu.Button.prototype,
-
 	_init: function() {     
-		let self=this;
 		this.loadConfig();
+		this.compat_password_method();
+		this.setupUI();
+		this.updateRecentURL();
+	},
+	_onPreferencesActivate: function() {
+		Util.spawn(["gnome-shell-extension-prefs","pwcalc@thilomaurer.de"]);
+		return 0;
+	},
+	setupUI: function() {
 		PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
 		this.iconActor = new St.Icon({ icon_name: 'dialog-password-symbolic', style_class: 'system-status-icon' });
@@ -64,97 +72,7 @@ PasswordCalculator.prototype = {
 		let bottomSection = new PopupMenu.PopupMenuSection();
 		this.headingLabel = new St.Label({ text:_("Password Calculator"), style_class: "heading", can_focus:false });
 
-		let secretChanged = function(o,e) {
-			let st = self.secretText;
-			let sec = st.get_text();
-			let pwc='';
-			if (sec!="") pwc='\u25cf'; // ● U+25CF BLACK CIRCLE
-			st.clutter_text.set_password_char(pwc);
-		};
-		
-		let compat_password_method = function() {
-			let type = self.PasswordMethod;
-			let keys = self.recentURL;
-			if (type=="__compat__") {
-				if (keys.length>0) {
-					self.PasswordMethod = "SHA1";
-					global.log("Password Calculator: Initializing password-method to SHA1 due to preexisting aliases");
-				} else {
-					self.PasswordMethod = "HMAC_SHA1";
-				}
-			}
-		}
-		compat_password_method();
-
-		let gen = function(o,e) {
-			let url = self.urlText.get_text();
-			let sec = self.secretText.get_text();
-			if ((url!="")&&(sec!="")) {
-				let len = self.DefaultPasswordLength;
-				let type = self.PasswordMethod;
-				let calc = calculatePassword[type];
-				if (calc === undefined) return;
-				let pwd = calc(sec, url, len);
-				let showcount;
-				if (len<=8) showcount=1;
-				else if (len<=16) showcount=3; 
-				else showcount=4;
-				let obfuscated=pwd.substring(0,showcount)+Array(len+1-2*showcount).join("\u00B7")+pwd.substring(len-showcount);
-				self.pwdText.set_text(obfuscated);
-				let symbol = e.get_key_symbol();
-				if (symbol == Clutter.Return) {
-					if (self.CopyToClipboard) {
-						clipboard.set_text(CLIPBOARD_TYPE,pwd);
-						if (self.ShowCopyNotification) showMessage("Password Calculator: Password copied to clipboard.");
-					}
-					if (self.CopyToPrimarySelection) {
-						clipboard.set_text(PRIMARY_TYPE,pwd);
-						if (self.ShowCopyNotification) showMessage("Password Calculator: Password copied to primary selection.");
-					}
-					var a=self.recentURL;
-					if (a.indexOf(url)<0) a[a.length]=url;
-					a.sort();
-					self.recentURL=a;
-					self.menu.actor.hide();
-				}
-			} else {
-				self.pwdText.set_text(_("your password"));
-			}
-		};
-
-		var removeDuplicates = function(a) {
-			var b = {};
-			for (var i = 0; i < a.length; i++)
-				b[a[i]] = a[i];
-			var c = [];
-			for (var key in b)
-				c.push(key);
-			return c;
-		}
-
 		this.urlCombo = new PopupMenu.PopupSubMenuMenuItem("");
-
-		let updateRecentURL = function() {
-			var a=removeDuplicates(self.recentURL);
-			self.recentURL=a;
-			self.urlCombo.menu.removeAll();
-			for (let i=0;i<a.length;i++) {
-				let item = new MyPopupMenuItem(a[i]);
-				self.urlCombo.menu.addMenuItem(item, i);
-				item.connect('selected', Lang.bind(self, self.urlSelected, a[i]));
-			}
-			let labeltext;
-			if (a.length==0) labeltext=_("No Recent Aliases");
-			else labeltext=_("Recent Aliases");
-			self.urlCombo.label.set_text(labeltext);
-		};
-
-		let clear = function(o,e) {
-			self.urlText.set_text("");
-			self.secretText.set_text("");
-			self.pwdText.set_text(_("your password"));
-			updateRecentURL();
-		};
 
 		this.urlText = new St.Entry({
 			name: "searchEntry",
@@ -164,7 +82,10 @@ PasswordCalculator.prototype = {
 			style_class: "search-entry first"
 		});
 
-		this.urlText.clutter_text.connect('key-release-event', gen);
+		let self=this;
+		this.urlText.clutter_text.connect('key-release-event', function(o,e) {
+			self.urlChanged.apply(self,[o,e]);
+		});
 
 		this.secretText = new St.Entry({
 			name: "searchEntry",
@@ -173,8 +94,12 @@ PasswordCalculator.prototype = {
 			can_focus: true,
 			style_class: "search-entry last"
 		}); 
-		this.secretText.clutter_text.connect('text-changed', secretChanged);
-		this.secretText.clutter_text.connect('key-release-event', gen);
+		this.secretText.clutter_text.connect('text-changed', function(o,e) {
+			self.secretChanged.apply(self,[o,e]);
+		});
+		this.secretText.clutter_text.connect('key-release-event', function(o,e) {
+			self.gen.apply(self,[o,e]);
+		});
 		this.pwdText = new St.Label({style_class: "pwd", can_focus:false});
 		bottomSection.actor.add_actor(this.headingLabel);
 		bottomSection.actor.add_actor(this.urlText);
@@ -190,17 +115,120 @@ PasswordCalculator.prototype = {
 		this.menu.addMenuItem(item);
 
 		this.menu.connect('open-state-changed', function(sender,open) {
-			clear();
+			self.clear();
 			if (!open) self.urlText.clutter_text.grab_key_focus();
 		});
-
-		updateRecentURL();    
 	},
-	_onPreferencesActivate: function() {
-		Util.spawn(["gnome-shell-extension-prefs","pwcalc@thilomaurer.de"]);
-		return 0;
+	secretChanged: function(o,e) {
+		let st = this.secretText;
+		let sec = st.get_text();
+		let pwc='';
+		if (sec!="") pwc='\u25cf'; // ● U+25CF BLACK CIRCLE
+		st.clutter_text.set_password_char(pwc);
+	},
+	compat_password_method: function() {
+		let type = this.PasswordMethod;
+		let keys = this.recentURL;
+		if (this.LastVersion == "undefined" && type == "HMAC_SHA1") {
+			this.PasswordMethod = "HMAC_SHA1_INEXACT";
+			global.log("Password Calculator: Setting password-method to HMC-SHA1_INEXACT, since it is the method used before.");
+		} else if (type == "__compat__") {
+			if (keys.length>0) {
+				this.PasswordMethod = "SHA1";
+				global.log("Password Calculator: Initializing password-method to SHA1 due to preexisting aliases");
+			} else {
+				this.PasswordMethod = "HMAC_SHA1";
+			}
+		}
+		this.LastVersion = version;
+	},
+	urlChanged: function(o,e) {
+		global.log("urlChanged");
+		this.gen(o,e);
+		let url = this.urlText.get_text();
+		if (url.length>0) {
+			let urls = this.recentURL;
+			urls = urls.filter(u => u.toLowerCase().indexOf(url.toLowerCase())!=-1);
+			this.updateRecentURL(urls);
+		} else {
+			this.updateRecentURL();
+		}
+	},
+	gen: function(o,e) {
+		let url = this.urlText.get_text();
+		let sec = this.secretText.get_text();
+		if ((url!="")&&(sec!="")) {
+			let len = this.DefaultPasswordLength;
+			let type = this.PasswordMethod;
+			let calc = calculatePassword[type];
+			if (calc === undefined) return;
+			let pwd = calc(sec, url, len);
+			this.pwdText.set_text(this.obfuscate(pwd));
+			let symbol = e.get_key_symbol();
+			if (symbol == Clutter.Return) {
+				this.copyAndSendNotification(pwd);
+				this.addRecentURL(url);
+				this.menu.actor.hide();
+			}
+		} else {
+			this.pwdText.set_text(_("your password"));
+		}
+	},
+	obfuscate: function(text) {
+		let len = text.length;
+		let showcount;
+		if (len<=8) showcount=1;
+		else if (len<=12) showcount=2;
+		else if (len<=16) showcount=3;
+		else showcount=4;
+		return text.substring(0,showcount)+Array(len+1-2*showcount).join("\u00B7")+text.substring(len-showcount);
+	},
+	addRecentURL: function(url) {
+		var a=this.recentURL;
+		if (a.indexOf(url)<0) {
+			a.push(url);
+			a.sort();
+			this.recentURL=a;
+		}
+	},
+	copyAndSendNotification: function(pwd) {
+		if (this.CopyToClipboard) {
+			clipboard.set_text(CLIPBOARD_TYPE,pwd);
+			if (this.ShowCopyNotification) showMessage("Password Calculator: Password copied to clipboard.");
+		}
+		if (this.CopyToPrimarySelection) {
+			clipboard.set_text(PRIMARY_TYPE,pwd);
+			if (this.ShowCopyNotification) showMessage("Password Calculator: Password copied to primary selection.");
+		}
+	},
+	clear: function() {
+		this.urlText.set_text("");
+		this.secretText.set_text("");
+		this.pwdText.set_text(_("your password"));
+		this.updateRecentURL();
+	},
+	updateRecentURL: function(list) {
+		let sublist = (list!=null);
+		if (!sublist) list = this.recentURL;
+		list = removeDuplicates(list);
+		this.urlCombo.menu.removeAll();
+		for (let i=0;i<list.length;i++) {
+			let item = new MyPopupMenuItem(list[i]);
+			this.urlCombo.menu.addMenuItem(item, i);
+			item.connect('selected', Lang.bind(this, this.urlSelected, list[i]));
+		}
+		let labeltext;
+		if (sublist) {
+			if (list.length==0) labeltext=_("No Matching Recent Aliases");
+			else labeltext=_("Matching Recent Aliases ("+list.length+")");
+		} else {
+			if (list.length==0) labeltext=_("No Recent Aliases");
+			else labeltext=_("Recent Aliases");
+		}
+		this.urlCombo.label.set_text(labeltext);
 	},
 	urlSelected: function(sender,URL) {
+		this.updateRecentURL();
 		this.urlText.set_text(URL);
 		this.secretText.clutter_text.grab_key_focus();
 	},
@@ -262,6 +290,12 @@ PasswordCalculator.prototype = {
 	get DefaultPasswordLength() {
 		return this.getInteger(DEFAULT_PASSWORD_LENGTH_KEY);
 	},
+	get LastVersion() {
+		return this.getString(LAST_VERSION_KEY);
+	},
+	set LastVersion(v) {
+		return this.setString(LAST_VERSION_KEY,v);
+	},
 	get PasswordMethod() {
 		return this.getString(PASSWORD_METHOD_KEY);
 	},
@@ -276,6 +310,16 @@ PasswordCalculator.prototype = {
 	}
 }
 
+function removeDuplicates(a) {
+	var b = {};
+	for (var i = 0; i < a.length; i++)
+		b[a[i]] = a[i];
+	var c = [];
+	for (var key in b)
+		c.push(key);
+	return c;
+}
+
 function showMessage(text) { 
 	let source = new MessageTray.SystemNotificationSource();
 	Main.messageTray.add(source);
@@ -283,31 +327,60 @@ function showMessage(text) {
 	notification.setTransient(true);
 	source.notify(notification);
 }
+
+function hex2string(hex) {
+	var array = hex.match(/.{2}/g);
+	var bytes = new Uint8Array(20);
+	for (var i = 0; i < array.length; i++)
+		bytes[i] = parseInt(array[i], 16);
+	return String.fromCharCode.apply(null, bytes);
+}
+
+function FilledArray(len,value) {
+	var a=new Uint8Array(len);
+	for (var i=0;i<len;i++)
+		a[i]=value;
+	return a;
+}
    
 var calculatePassword={
 	SHA1: function(secret, domain, length) {
 		if (secret==""||domain=="") return "";
 		var sha1 = Utils.Sha1.hash(secret + domain);
-		var array = sha1.match(/.{1,2}/g);
-		var bytes = new Uint8Array(20);
-		for (var i = 0, j = array.length; i < j; i += 1)
-		    bytes[i] = parseInt(array[i], 16);
-		var base64 = Base64.base64.encode(String.fromCharCode.apply(null, bytes));
+		var base64 = Base64.base64.encode(hex2string(sha1));
 		return base64.substring(0, length);
 	},
 	HMAC_SHA1: function(secret, domain, length) {
 		if (secret==""||domain=="") return "";
 
-		var FilledArray=function(len,value) {
-			var a=new Uint8Array(len);
-			for (var i=0;i<len;i++)
-				a[i]=value;
-			return a;
-		};
 		var i_key_b = FilledArray(64,0x36);
 		var o_key_b = FilledArray(64,0x5c);
 		var i, j, sha1;
 
+		secret = Utils.Utf8.encode(secret);
+		domain = Utils.Utf8.encode(domain);
+
+		if (secret.length > 64)
+			secret = hex2string(Utils.Sha1.hash(secret, false));
+
+		for (i = 0; i < secret.length; i++) {
+			i_key_b[i] ^= secret.charCodeAt(i);
+			o_key_b[i] ^= secret.charCodeAt(i);
+		}
+		i_key_b = String.fromCharCode.apply(null, i_key_b);
+		o_key_b = String.fromCharCode.apply(null, o_key_b);
+
+		sha1 = hex2string(Utils.Sha1.hash(i_key_b + domain, false));
+		sha1 = hex2string(Utils.Sha1.hash(o_key_b + sha1, false));
+		var base64 = Base64.base64.encode(sha1);
+		return base64.substring(0, length);
+	},
+	HMAC_SHA1_INEXACT: function(secret, domain, length) {
+		if (secret==""||domain=="") return "";
+
+		var i_key_b = FilledArray(64,0x36);
+		var o_key_b = FilledArray(64,0x5c);
+		var i, j, sha1;
 
 		secret = Utils.Utf8.encode(secret);
 		domain = Utils.Utf8.encode(domain);
@@ -319,15 +392,12 @@ var calculatePassword={
 			i_key_b[i] ^= secret.charCodeAt(i);
 			o_key_b[i] ^= secret.charCodeAt(i);
 		}
+		i_key_b = String.fromCharCode.apply(null, i_key_b);
+		o_key_b = String.fromCharCode.apply(null, o_key_b);
 
-		sha1 = Utils.Sha1.hash(String.fromCharCode.apply(null, i_key_b) + domain, false);
-		sha1 = Utils.Sha1.hash(String.fromCharCode.apply(null, o_key_b) + sha1, false);
-
-		var array = sha1.match(/.{2}/g);    
-		var bytes = new Uint8Array(20);
-		for (i = 0, j = array.length; i < j; i += 1)
-			bytes[i] = parseInt(array[i], 16);
-		var base64 = Base64.base64.encode(String.fromCharCode.apply(null, bytes));
+		sha1 =            Utils.Sha1.hash(i_key_b + domain, false);
+		sha1 = hex2string(Utils.Sha1.hash(o_key_b + sha1, false));
+		var base64 = Base64.base64.encode(sha1);
 		return base64.substring(0, length);
 	}
 };

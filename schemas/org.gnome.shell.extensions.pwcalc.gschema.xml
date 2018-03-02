@@ -33,5 +33,9 @@
       <default>'__compat__'</default>
       <summary>Password Method</summary>
     </key>
+    <key type="s" name="last-version">
+      <default>'undefined'</default>
+      <summary>Version of application that ran last.</summary>
+    </key>
   </schema>
 </schemalist>
