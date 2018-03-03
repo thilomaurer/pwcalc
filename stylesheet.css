@@ -1,8 +1,8 @@
 .pwCalc .pwd {
-    font-family: monospace;
-    padding-top: 10px;
-    text-align: center;
-    font-size: 127%;
+	font-family: monospace;
+	padding-top: 10px;
+	text-align: center;
+	font-size: 127%;
 }
 
 .pwCalcSuggestion {
@@ -23,8 +23,8 @@
 }
 
 .pwCalc .heading {
-    text-align: center;
-    padding: 4px;
+	text-align: center;
+	padding: 4px;
 }
 
 .pwCalc {
@@ -39,6 +39,7 @@
 .pwCalc .last:focus {
 	border-color:#215d9c;
 }
+
 .pwCalc .first:focus {
 	border-color:#215d9c;
 }
