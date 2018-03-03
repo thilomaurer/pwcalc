@@ -5,6 +5,23 @@
     font-size: 127%;
 }
 
+.pwCalcSuggestion {
+	background-color: #2e3436;
+	color:white;
+	margin-left:12px;
+	margin-right:12px;
+	box-shadow: inset 7px 0 4px -7px rgba(0,0,0,0.4);
+	border:1px solid black;
+	border-top:0;
+	border-bottom:0;
+
+}
+
+.pwCalcSuggestion:focus,
+.pwCalcSuggestion:hover {
+	background-color: #454c4c;
+}
+
 .pwCalc .heading {
     text-align: center;
     padding: 4px;
@@ -16,8 +33,17 @@
 
 .pwCalc .last {
 	border-radius:0px 0px 8px 8px;
+	border-color:black;
+}
+
+.pwCalc .last:focus {
+	border-color:#215d9c;
+}
+.pwCalc .first:focus {
+	border-color:#215d9c;
 }
 
 .pwCalc .first {
 	border-radius:8px 8px 0px 0px;
+	border-color:black;
 }

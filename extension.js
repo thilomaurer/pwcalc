@@ -51,6 +51,20 @@ const MyPopupMenuItem = new Lang.Class({
 	}
 });
 
+const MyPopupMenuItem2 = new Lang.Class({
+	Name: 'MyPopupMenuItem2',
+	Extends: PopupMenu.PopupBaseMenuItem,
+	_init: function (text, params) {
+		this.parent(params);
+		this.label = new St.Label({ text: text });
+		this.actor.add_child(this.label);
+		this.actor.label_actor = this.label;
+	},
+	activate: function(event) {
+		this.emit('selected');
+	}
+});
+
 PasswordCalculator.prototype = {
 	__proto__: PanelMenu.Button.prototype,
 	_init: function() {     
@@ -69,6 +83,7 @@ PasswordCalculator.prototype = {
 		this.iconActor = new St.Icon({ icon_name: 'dialog-password-symbolic', style_class: 'system-status-icon' });
 		this.actor.add_actor(this.iconActor);
 
+		let topSection = new PopupMenu.PopupMenuSection();
 		let bottomSection = new PopupMenu.PopupMenuSection();
 		this.headingLabel = new St.Label({ text:_("Password Calculator"), style_class: "heading", can_focus:false });
 
@@ -101,11 +116,13 @@ PasswordCalculator.prototype = {
 			self.gen.apply(self,[o,e]);
 		});
 		this.pwdText = new St.Label({style_class: "pwd", can_focus:false});
-		bottomSection.actor.add_actor(this.headingLabel);
-		bottomSection.actor.add_actor(this.urlText);
+		topSection.actor.add_actor(this.headingLabel);
+		topSection.actor.add_actor(this.urlText);
 		bottomSection.actor.add_actor(this.secretText);
 		bottomSection.actor.add_actor(this.pwdText);
+		topSection.actor.add_style_class_name("pwCalc");
 		bottomSection.actor.add_style_class_name("pwCalc");
+		this.menu.addMenuItem(topSection);
 		this.menu.addMenuItem(bottomSection);
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());    
 		this.menu.addMenuItem(this.urlCombo);
@@ -143,16 +160,16 @@ PasswordCalculator.prototype = {
 		this.LastVersion = version;
 	},
 	urlChanged: function(o,e) {
-		global.log("urlChanged");
-		this.gen(o,e);
-		let url = this.urlText.get_text();
-		if (url.length>0) {
-			let urls = this.recentURL;
-			urls = urls.filter(u => u.toLowerCase().indexOf(url.toLowerCase())!=-1);
-			this.updateRecentURL(urls);
-		} else {
-			this.updateRecentURL();
+		var urls;
+		this.gen(o);
+		if (e.get_key_symbol() == Clutter.Return)
+			this.secretText.clutter_text.grab_key_focus();
+		else {
+			let url = this.urlText.get_text();
+			if (url.length>0)
+				urls = this.recentURL.filter(u => u.toLowerCase().indexOf(url.toLowerCase())!=-1);
 		}
+		this.updateSuggestions(urls);
 	},
 	gen: function(o,e) {
 		let url = this.urlText.get_text();
@@ -164,8 +181,7 @@ PasswordCalculator.prototype = {
 			if (calc === undefined) return;
 			let pwd = calc(sec, url, len);
 			this.pwdText.set_text(this.obfuscate(pwd));
-			let symbol = e.get_key_symbol();
-			if (symbol == Clutter.Return) {
+			if (e && e.get_key_symbol() == Clutter.Return) {
 				this.copyAndSendNotification(pwd);
 				this.addRecentURL(url);
 				this.menu.actor.hide();
@@ -205,11 +221,27 @@ PasswordCalculator.prototype = {
 		this.urlText.set_text("");
 		this.secretText.set_text("");
 		this.pwdText.set_text(_("your password"));
-		this.updateRecentURL();
+		this.updateSuggestions();
 	},
-	updateRecentURL: function(list) {
-		let sublist = (list!=null);
-		if (!sublist) list = this.recentURL;
+	updateSuggestions: function(list) {
+		this.suggestionsItems.forEach(i=>this.menu.box.remove_child(i.actor));
+		this.suggestionsItems=[];
+		if (list!=null) {
+			list = removeDuplicates(list);
+			let N=list.length;
+			if (N>8) N=8;
+			for (let i=0;i<N;i++) {
+				let item = new MyPopupMenuItem2(list[i]);
+				item.actor.add_style_class_name("pwCalcSuggestion");
+				this.menu.addMenuItem(item,i+1);
+				item.connect('selected', Lang.bind(this, this.urlSelected, list[i]));
+				this.suggestionsItems.push(item);
+			}
+		}
+	},
+	suggestionsItems:[],
+	updateRecentURL: function() {
+		let list = this.recentURL;
 		list = removeDuplicates(list);
 		this.urlCombo.menu.removeAll();
 		for (let i=0;i<list.length;i++) {
@@ -218,17 +250,12 @@ PasswordCalculator.prototype = {
 			item.connect('selected', Lang.bind(this, this.urlSelected, list[i]));
 		}
 		let labeltext;
-		if (sublist) {
-			if (list.length==0) labeltext=_("No Matching Recent Aliases");
-			else labeltext=_("Matching Recent Aliases ("+list.length+")");
-		} else {
-			if (list.length==0) labeltext=_("No Recent Aliases");
-			else labeltext=_("Recent Aliases");
-		}
+		if (list.length==0) labeltext=_("No Recent Aliases");
+		else labeltext=_("Recent Aliases");
 		this.urlCombo.label.set_text(labeltext);
 	},
 	urlSelected: function(sender,URL) {
-		this.updateRecentURL();
+		this.updateSuggestions();
 		this.urlText.set_text(URL);
 		this.secretText.clutter_text.grab_key_focus();
 	},
