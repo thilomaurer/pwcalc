@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for i in $(dconf list /org/gnome/shell/extensions/pwcalc/); do
+	echo "$i = $(dconf read /org/gnome/shell/extensions/pwcalc/$i)"
+done

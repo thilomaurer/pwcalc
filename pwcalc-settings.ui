@@ -40,6 +40,9 @@
       <row>
         <col id="0">HMAC_SHA1</col>
       </row>
+      <row>
+        <col id="0">HMAC_SHA1_INEXACT</col>
+      </row>
     </data>
   </object>
   <object class="GtkBox" id="main-widget">

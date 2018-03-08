@@ -3,7 +3,7 @@
  *  Password Calculator extension for GNOME Shell preferences 
  *  - Creates a widget to set the preferences of the pwcalc extension
  *
- * Copyright (C) 2014
+ * Copyright (C) 2014-2018
  *     Thilo Maurer <tm@thilomaurer.de>
  *
  * This file is part of gnome-shell-extension-pwcalc.
@@ -29,6 +29,7 @@ const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
+const Clutter = imports.gi.Clutter;
 const Lang = imports.lang;
 
 const Gettext = imports.gettext.domain('pwCalc');
@@ -82,7 +83,7 @@ function buildPrefsWidget() {
 		if (ac==null) return;
 		var l=getrecentURL();
 		let textDialog = _("Remove Alias '%s' ?").replace("%s",l[ac]);
-		let dialog = new Gtk.Dialog({title : ""});
+		let dialog = new Gtk.Dialog({title : "Alias Removal"});
 		let label = new Gtk.Label({label : textDialog});
 		label.margin_bottom = 12;
 
@@ -221,12 +222,13 @@ function buildPrefsWidget() {
 
     this.treeview.connect("key-press-event",function(sender,event)
     {
-		if (event.keyval==Gdk.KEY_Delete) removeSelectedItem();
+	var kv=event.get_keyval()[1];
+	if (kv==Clutter.Delete||kv==Clutter.BackSpace) removeSelectedItem();
     });
 
     this.Builder.get_object("treeview-selection").connect("changed",function(select)
     {
-    	let a = select.get_selected_rows(this.liststore)[0][0];
+    	let a = select.get_selected_rows()[0][0];
 	let sens=(a!=null);
 
 	if (sens) self.selectedItem = parseInt(a.to_string());
@@ -328,13 +330,7 @@ function buildPrefsWidget() {
 	var string2combo=function(objectkey,settingskey) {
 		var s=self.Builder.get_object(objectkey);
 		s.active_id=getString(settingskey);
-/*
-		s.connect("notify::active_id",function() { 
-			setString(settingskey,arguments[0].active_id);
-		});
-*/
 		s.connect("notify::active",function() { 
-			global.log("active",JSON.stringify(arguments));
 			setString(settingskey,arguments[0].active_id);
 		});
 	};
