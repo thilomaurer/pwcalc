@@ -1,4 +1,4 @@
-const version = "1.1.1";
+const version = "1.1.2";
 
 const St = imports.gi.St;
 const PanelMenu = imports.ui.panelMenu;
@@ -32,10 +32,6 @@ const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
 const PASSWORD_METHOD_KEY = 'password-method';
 const LAST_VERSION_KEY = 'last-version';
 
-function PasswordCalculator() { 
-	this._init();
-}
-
 const MyPopupMenuItem = new Lang.Class({
 	Name: 'MyPopupMenuItem',
 	Extends: PopupMenu.PopupBaseMenuItem,
@@ -65,9 +61,11 @@ const MyPopupMenuItem2 = new Lang.Class({
 	}
 });
 
-PasswordCalculator.prototype = {
-	__proto__: PanelMenu.Button.prototype,
-	_init: function() {     
+const PasswordCalculator = new Lang.Class({
+	Name: 'PasswordCalculator',
+	Extends: PanelMenu.Button,
+	_init: function() {
+		this.parent(0, 'PasswordCalculator', false);
 		this.loadConfig();
 		this.compat_password_method();
 		this.setupUI();
@@ -78,7 +76,6 @@ PasswordCalculator.prototype = {
 		return 0;
 	},
 	setupUI: function() {
-		PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
 		this.iconActor = new St.Icon({ icon_name: 'dialog-password-symbolic', style_class: 'system-status-icon' });
 		this.actor.add_actor(this.iconActor);
@@ -271,8 +268,6 @@ PasswordCalculator.prototype = {
 			}
 		});
 	},
-	_enable: function() { },
-	_disable: function() { },
   	get recentURL() {
     		var js=this.getString(RECENT_URL_KEY);
     		var obj;
@@ -335,7 +330,7 @@ PasswordCalculator.prototype = {
 	get KeepCopyOfAliasesFilename() {
 		return this.getString(KEEP_COPY_OF_ALIASES_FILENAME_KEY);
 	}
-}
+});
 
 function removeDuplicates(a) {
 	var b = {};
@@ -437,13 +432,11 @@ function init(metadata) {
 }
 
 function enable() {
-	pwCalc = new PasswordCalculator();
-	pwCalc._enable();
+	pwCalc = new PasswordCalculator;
 	Main.panel.addToStatusArea('pwCalc', pwCalc);
 }
 
 function disable() {
-	pwCalc._disable();
 	pwCalc.destroy();
 	pwCalc = null;
 }
