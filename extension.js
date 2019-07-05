@@ -1,15 +1,15 @@
-const version = "1.1.2";
+const version = "1.1.3";
 
-const St = imports.gi.St;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
 const Lang = imports.lang;
-const Clutter = imports.gi.Clutter;
-const GLib = imports.gi.GLib;
-const Gio = imports.gi.Gio;
-const Shell = imports.gi.Shell;
+
+const {
+    Clutter, Gio, GLib, GObject, Shell, St
+} = imports.gi;
+
 const Util = imports.misc.util;
 const Gettext = imports.gettext;
 const _ = Gettext.domain('pwCalc').gettext;
@@ -32,50 +32,46 @@ const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
 const PASSWORD_METHOD_KEY = 'password-method';
 const LAST_VERSION_KEY = 'last-version';
 
-const MyPopupMenuItem = new Lang.Class({
-	Name: 'MyPopupMenuItem',
-	Extends: PopupMenu.PopupBaseMenuItem,
-	_init: function (text, params) {
-		this.parent(params);
+const MyPopupMenuItem = class extends PopupMenu.PopupBaseMenuItem {
+	constructor (text, params) {
+		super(params);
 		this.label = new St.Label({ text: text });
 		this.actor.add_child(this.label);
 		this.actor.label_actor = this.label;
-	},
-	activate: function(event) {
+	}
+	activate(event) {
 		this._parent.close(true);
 		this.emit('selected');
 	}
-});
+};
 
-const MyPopupMenuItem2 = new Lang.Class({
-	Name: 'MyPopupMenuItem2',
-	Extends: PopupMenu.PopupBaseMenuItem,
-	_init: function (text, params) {
-		this.parent(params);
+const MyPopupMenuItem2 = class extends PopupMenu.PopupBaseMenuItem {
+	constructor (text, params) {
+		super(params);
 		this.label = new St.Label({ text: text });
 		this.actor.add_child(this.label);
 		this.actor.label_actor = this.label;
-	},
-	activate: function(event) {
+	}
+	activate(event) {
 		this.emit('selected');
 	}
-});
+};
 
-const PasswordCalculator = new Lang.Class({
-	Name: 'PasswordCalculator',
-	Extends: PanelMenu.Button,
-	_init: function() {
-		this.parent(0, 'PasswordCalculator', false);
+let PasswordCalculator = GObject.registerClass(
+class PasswordCalculator extends PanelMenu.Button {
+	_init() {
+		super._init(0, 'PasswordCalculator', false);
+		this.suggestionsItems=[];
 		this.loadConfig();
 		this.compat_password_method();
 		this.setupUI();
 		this.updateRecentURL();
-	},
-	_onPreferencesActivate: function() {
+	}
+	_onPreferencesActivate() {
 		Util.spawn(["gnome-shell-extension-prefs","pwcalc@thilomaurer.de"]);
 		return 0;
-	},
-	setupUI: function() {
+	}
+	setupUI() {
 
 		this.iconActor = new St.Icon({ icon_name: 'dialog-password-symbolic', style_class: 'system-status-icon' });
 		this.actor.add_actor(this.iconActor);
@@ -132,15 +128,15 @@ const PasswordCalculator = new Lang.Class({
 			self.clear();
 			if (!open) self.urlText.clutter_text.grab_key_focus();
 		});
-	},
-	secretChanged: function(o,e) {
+	}
+	secretChanged(o,e) {
 		let st = this.secretText;
 		let sec = st.get_text();
 		let pwc='';
 		if (sec!="") pwc='\u25cf'; // ● U+25CF BLACK CIRCLE
 		st.clutter_text.set_password_char(pwc);
-	},
-	compat_password_method: function() {
+	}
+	compat_password_method() {
 		let type = this.PasswordMethod;
 		let keys = this.recentURL;
 		if (this.LastVersion == "undefined" && type == "HMAC_SHA1") {
@@ -155,8 +151,8 @@ const PasswordCalculator = new Lang.Class({
 			}
 		}
 		this.LastVersion = version;
-	},
-	urlChanged: function(o,e) {
+	}
+	urlChanged(o,e) {
 		var urls;
 		this.gen(o);
 		if (e.get_key_symbol() == Clutter.Return)
@@ -167,8 +163,8 @@ const PasswordCalculator = new Lang.Class({
 				urls = this.recentURL.filter(u => u.toLowerCase().indexOf(url.toLowerCase())!=-1);
 		}
 		this.updateSuggestions(urls);
-	},
-	gen: function(o,e) {
+	}
+	gen(o,e) {
 		let url = this.urlText.get_text();
 		let sec = this.secretText.get_text();
 		if ((url!="")&&(sec!="")) {
@@ -186,8 +182,8 @@ const PasswordCalculator = new Lang.Class({
 		} else {
 			this.pwdText.set_text(_("your password"));
 		}
-	},
-	obfuscate: function(text) {
+	}
+	obfuscate(text) {
 		let len = text.length;
 		let showcount;
 		if (len<=8) showcount=1;
@@ -195,16 +191,16 @@ const PasswordCalculator = new Lang.Class({
 		else if (len<=16) showcount=3;
 		else showcount=4;
 		return text.substring(0,showcount)+Array(len+1-2*showcount).join("\u00B7")+text.substring(len-showcount);
-	},
-	addRecentURL: function(url) {
+	}
+	addRecentURL(url) {
 		var a=this.recentURL;
 		if (a.indexOf(url)<0) {
 			a.push(url);
 			a.sort();
 			this.recentURL=a;
 		}
-	},
-	copyAndSendNotification: function(pwd) {
+	}
+	copyAndSendNotification(pwd) {
 		if (this.CopyToClipboard) {
 			clipboard.set_text(CLIPBOARD_TYPE,pwd);
 			if (this.ShowCopyNotification) showMessage("Password Calculator: Password copied to clipboard.");
@@ -213,14 +209,14 @@ const PasswordCalculator = new Lang.Class({
 			clipboard.set_text(PRIMARY_TYPE,pwd);
 			if (this.ShowCopyNotification) showMessage("Password Calculator: Password copied to primary selection.");
 		}
-	},
-	clear: function() {
+	}
+	clear() {
 		this.urlText.set_text("");
 		this.secretText.set_text("");
 		this.pwdText.set_text(_("your password"));
 		this.updateSuggestions();
-	},
-	updateSuggestions: function(list) {
+	}
+	updateSuggestions(list) {
 		this.suggestionsItems.forEach(i=>this.menu.box.remove_child(i.actor));
 		this.suggestionsItems=[];
 		if (list!=null) {
@@ -235,9 +231,8 @@ const PasswordCalculator = new Lang.Class({
 				this.suggestionsItems.push(item);
 			}
 		}
-	},
-	suggestionsItems:[],
-	updateRecentURL: function() {
+	}
+	updateRecentURL() {
 		let list = this.recentURL;
 		list = removeDuplicates(list);
 		this.urlCombo.menu.removeAll();
@@ -250,13 +245,13 @@ const PasswordCalculator = new Lang.Class({
 		if (list.length==0) labeltext=_("No Recent Aliases");
 		else labeltext=_("Recent Aliases");
 		this.urlCombo.label.set_text(labeltext);
-	},
-	urlSelected: function(sender,URL) {
+	}
+	urlSelected(sender,URL) {
 		this.updateSuggestions();
 		this.urlText.set_text(URL);
 		this.secretText.clutter_text.grab_key_focus();
-	},
-	loadConfig: function() {
+	}
+	loadConfig() {
 		this.settings = Convenience.getSettings();
 		let self = this;
 		this._settingsC = this.settings.connect("changed::"+RECENT_URL_KEY,function(a,key) {
@@ -267,7 +262,7 @@ const PasswordCalculator = new Lang.Class({
 				if (success==false) global.log("pwcalc: Unable to write to file "+fn);
 			}
 		});
-	},
+	}
   	get recentURL() {
     		var js=this.getString(RECENT_URL_KEY);
     		var obj;
@@ -277,56 +272,56 @@ const PasswordCalculator = new Lang.Class({
 	    		obj=[];
 		}
 		return obj;
-	},
+	}
 	set recentURL(v)
 	{
 		var json=JSON.stringify(v);
 		if (json!==this.getString(RECENT_URL_KEY))
 			this.settings.set_string(RECENT_URL_KEY,json);
-	},
-        getBool: function(key) 
+	}
+	getBool(key)
         { 
 	        return this.settings.get_boolean(key); 
-        },
-        getInteger: function(key) 
+	}
+	getInteger(key)
         { 
 	        return this.settings.get_int(key); 
-        },
-        getString: function(key) 
+	}
+	getString(key)
         { 
 	        return this.settings.get_string(key); 
-        },
-        setString: function(key,value) 
+	}
+	setString(key,value)
         { 
 	        return this.settings.set_string(key,value); 
-        },
+	}
 	get ShowCopyNotification() {
 		return this.getBool(SHOW_COPY_NOTIFICATION_KEY);
-	},
+	}
 	get CopyToClipboard() {
 		return this.getBool(COPY_TO_CLIPBOARD_KEY);
-	},
+	}
 	get CopyToPrimarySelection() {
 		return this.getBool(COPY_TO_PRIMARY_KEY);
-	},
+	}
 	get DefaultPasswordLength() {
 		return this.getInteger(DEFAULT_PASSWORD_LENGTH_KEY);
-	},
+	}
 	get LastVersion() {
 		return this.getString(LAST_VERSION_KEY);
-	},
+	}
 	set LastVersion(v) {
 		return this.setString(LAST_VERSION_KEY,v);
-	},
+	}
 	get PasswordMethod() {
 		return this.getString(PASSWORD_METHOD_KEY);
-	},
+	}
 	set PasswordMethod(v) {
 		return this.setString(PASSWORD_METHOD_KEY,v);
-	},
+	}
 	get KeepCopyOfAliasesInFile() {
 		return this.getBool(KEEP_COPY_OF_ALIASES_IN_FILE_KEY);
-	},
+	}
 	get KeepCopyOfAliasesFilename() {
 		return this.getString(KEEP_COPY_OF_ALIASES_FILENAME_KEY);
 	}
@@ -425,14 +420,14 @@ var calculatePassword={
 };
 
 
-function init(metadata) { 
+function init(metadata) {
 	let locales = metadata.path + "/locale";
 	Gettext.bindtextdomain('pwCalc', locales);
 	clipboard = St.Clipboard.get_default();
 }
 
 function enable() {
-	pwCalc = new PasswordCalculator;
+	pwCalc = new PasswordCalculator();
 	Main.panel.addToStatusArea('pwCalc', pwCalc);
 }
 
