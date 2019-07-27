@@ -7,7 +7,7 @@ const MessageTray = imports.ui.messageTray;
 const Lang = imports.lang;
 
 const {
-    Clutter, Gio, GLib, GObject, Shell, St
+	Clutter, Gio, GLib, GObject, Shell, St
 } = imports.gi;
 
 const Util = imports.misc.util;
@@ -263,37 +263,39 @@ class PasswordCalculator extends PanelMenu.Button {
 			}
 		});
 	}
-  	get recentURL() {
-    		var js=this.getString(RECENT_URL_KEY);
-    		var obj;
+	get recentURL() {
+		var js=this.getString(RECENT_URL_KEY);
+		var obj;
 		try {
-        		obj=JSON.parse(js);
+			obj=JSON.parse(js);
 		} catch(e) {
-	    		obj=[];
+			obj=[];
 		}
 		return obj;
 	}
 	set recentURL(v)
 	{
 		var json=JSON.stringify(v);
-		if (json!==this.getString(RECENT_URL_KEY))
+		if (json!==this.getString(RECENT_URL_KEY)) {
 			this.settings.set_string(RECENT_URL_KEY,json);
+			this.updateRecentURL();
+		}
 	}
 	getBool(key)
-        { 
-	        return this.settings.get_boolean(key); 
+	{
+		return this.settings.get_boolean(key);
 	}
 	getInteger(key)
-        { 
-	        return this.settings.get_int(key); 
+	{
+		return this.settings.get_int(key);
 	}
 	getString(key)
-        { 
-	        return this.settings.get_string(key); 
+	{
+		return this.settings.get_string(key);
 	}
 	setString(key,value)
-        { 
-	        return this.settings.set_string(key,value); 
+	{
+		return this.settings.set_string(key,value);
 	}
 	get ShowCopyNotification() {
 		return this.getBool(SHOW_COPY_NOTIFICATION_KEY);
@@ -359,7 +361,7 @@ function FilledArray(len,value) {
 		a[i]=value;
 	return a;
 }
-   
+
 var calculatePassword={
 	SHA1: function(secret, domain, length) {
 		if (secret==""||domain=="") return "";
