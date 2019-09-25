@@ -1,4 +1,4 @@
-const version = "1.1.3";
+const version = "1.1.4";
 
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
