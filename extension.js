@@ -1,4 +1,4 @@
-const version = "1.1.4";
+const version = "1.1.5";
 
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
@@ -40,8 +40,7 @@ let RecentAliasMenuItem = GObject.registerClass({
 	_init(text, params) {
 		super._init(params);
 		this.label = new St.Label({ text: text });
-		this.actor.add_child(this.label);
-		this.actor.label_actor = this.label;
+		this.add(this.label);
 	}
 	activate(event) {
 		this._parent.close(true);
@@ -57,8 +56,7 @@ let SuggestionMenuItem = GObject.registerClass({
 	_init(text, params) {
 		super._init(params);
 		this.label = new St.Label({ text: text });
-		this.actor.add_child(this.label);
-		this.actor.label_actor = this.label;
+		this.add(this.label);
 	}
 	activate(event) {
 		this.emit('select');
