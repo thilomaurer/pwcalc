@@ -1,4 +1,4 @@
-const version = "1.1.3";
+const version = "1.1.4";
 
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
@@ -7,7 +7,7 @@ const MessageTray = imports.ui.messageTray;
 const Lang = imports.lang;
 
 const {
-	Clutter, Gio, GLib, GObject, Shell, St
+	Gdk, Gio, GLib, GObject, Shell, St
 } = imports.gi;
 
 const Util = imports.misc.util;
@@ -155,7 +155,7 @@ class PasswordCalculator extends PanelMenu.Button {
 	urlChanged(o,e) {
 		var urls;
 		this.gen(o);
-		if (e.get_key_symbol() == Clutter.Return)
+		if (e.get_key_symbol() == Gdk.KEY_Return)
 			this.secretText.clutter_text.grab_key_focus();
 		else {
 			let url = this.urlText.get_text();
@@ -174,7 +174,7 @@ class PasswordCalculator extends PanelMenu.Button {
 			if (calc === undefined) return;
 			let pwd = calc(sec, url, len);
 			this.pwdText.set_text(this.obfuscate(pwd));
-			if (e && e.get_key_symbol() == Clutter.Return) {
+			if (e && e.get_key_symbol() == Gdk.KEY_Return) {
 				this.copyAndSendNotification(pwd);
 				this.addRecentURL(url);
 				this.menu.actor.hide();

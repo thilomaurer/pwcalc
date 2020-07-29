@@ -29,7 +29,6 @@ const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
-const Clutter = imports.gi.Clutter;
 const Lang = imports.lang;
 
 const Gettext = imports.gettext.domain('pwCalc');
@@ -222,8 +221,8 @@ function buildPrefsWidget() {
 
     this.treeview.connect("key-press-event",function(sender,event)
     {
-	var kv=event.get_keyval()[1];
-	if (kv==Clutter.Delete||kv==Clutter.BackSpace) removeSelectedItem();
+        var kv=event.get_keyval()[1];
+        if (kv==Gdk.KEY_Delete||kv==Gdk.KEY_BackSpace) removeSelectedItem();
     });
 
     this.Builder.get_object("treeview-selection").connect("changed",function(select)
