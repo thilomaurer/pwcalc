@@ -32,30 +32,38 @@ const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
 const PASSWORD_METHOD_KEY = 'password-method';
 const LAST_VERSION_KEY = 'last-version';
 
-const MyPopupMenuItem = class extends PopupMenu.PopupBaseMenuItem {
-	constructor (text, params) {
-		super(params);
+let RecentAliasMenuItem = GObject.registerClass({
+	Signals: {
+        'select': {}
+    }
+}, class RecentAliasMenuItem extends PopupMenu.PopupBaseMenuItem {
+	_init(text, params) {
+		super._init(params);
 		this.label = new St.Label({ text: text });
 		this.actor.add_child(this.label);
 		this.actor.label_actor = this.label;
 	}
 	activate(event) {
 		this._parent.close(true);
-		this.emit('selected');
+		this.emit('select');
 	}
-};
+});
 
-const MyPopupMenuItem2 = class extends PopupMenu.PopupBaseMenuItem {
-	constructor (text, params) {
-		super(params);
+let SuggestionMenuItem = GObject.registerClass({
+	Signals: {
+        'select': {}
+    }
+}, class SuggestionMenuItem extends PopupMenu.PopupBaseMenuItem {
+	_init(text, params) {
+		super._init(params);
 		this.label = new St.Label({ text: text });
 		this.actor.add_child(this.label);
 		this.actor.label_actor = this.label;
 	}
 	activate(event) {
-		this.emit('selected');
+		this.emit('select');
 	}
-};
+});
 
 let PasswordCalculator = GObject.registerClass(
 class PasswordCalculator extends PanelMenu.Button {
@@ -74,7 +82,7 @@ class PasswordCalculator extends PanelMenu.Button {
 	setupUI() {
 
 		this.iconActor = new St.Icon({ icon_name: 'dialog-password-symbolic', style_class: 'system-status-icon' });
-		this.actor.add_actor(this.iconActor);
+		this.add_child(this.iconActor);
 
 		let topSection = new PopupMenu.PopupMenuSection();
 		let bottomSection = new PopupMenu.PopupMenuSection();
@@ -224,10 +232,10 @@ class PasswordCalculator extends PanelMenu.Button {
 			let N=list.length;
 			if (N>8) N=8;
 			for (let i=0;i<N;i++) {
-				let item = new MyPopupMenuItem2(list[i]);
+				let item = new SuggestionMenuItem(list[i]);
 				item.actor.add_style_class_name("pwCalcSuggestion");
 				this.menu.addMenuItem(item,i+1);
-				item.connect('selected', Lang.bind(this, this.urlSelected, list[i]));
+				item.connect('select', Lang.bind(this, this.urlSelected, list[i]));
 				this.suggestionsItems.push(item);
 			}
 		}
@@ -237,9 +245,9 @@ class PasswordCalculator extends PanelMenu.Button {
 		list = removeDuplicates(list);
 		this.urlCombo.menu.removeAll();
 		for (let i=0;i<list.length;i++) {
-			let item = new MyPopupMenuItem(list[i]);
+			let item = new RecentAliasMenuItem(list[i]);
 			this.urlCombo.menu.addMenuItem(item, i);
-			item.connect('selected', Lang.bind(this, this.urlSelected, list[i]));
+			item.connect('select', Lang.bind(this, this.urlSelected, list[i]));
 		}
 		let labeltext;
 		if (list.length==0) labeltext=_("No Recent Aliases");
