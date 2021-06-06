@@ -299,3 +299,4 @@ var Base64 = {
 
   };
 
+//module.exports = {Sha1,Utf8};
