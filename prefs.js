@@ -39,6 +39,14 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 const EXTENSIONDIR = Me.dir.get_path();
 
+//load CSS from preferences GTK Window
+let provider = new Gtk.CssProvider();
+provider.load_from_path(EXTENSIONDIR + '/prefs.css');
+Gtk.StyleContext.add_provider_for_display(
+    Gdk.Display.get_default(),
+    provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+
 const RECENT_URL_KEY = 'recenturls';
 const SHOW_COPY_NOTIFICATION_KEY = 'show-copy-notification';
 const COPY_TO_CLIPBOARD_KEY = 'copy-to-clipboard';
@@ -54,12 +62,38 @@ const PASSWORD_METHOD_KEY = 'password-method';
 
 function init() {}
 
+const pwcalcBuilderScope = GObject.registerClass({
+  Implements: [Gtk.BuilderScope],
+}, class pwcalcBuilderScope extends GObject.Object {
+
+  vfunc_create_closure(builder, handlerName, flags, connectObject) {
+    if (flags & Gtk.BuilderClosureFlags.SWAPPED)
+      throw new Error('Unsupported template signal flag "swapped"');
+
+    if (typeof this[handlerName] === 'undefined')
+      throw new Error(`${handlerName} is undefined`);
+
+    return this[handlerName].bind(connectObject || this);
+  }
+
+  addButtonClicked(connectObject) {
+    //    addItemUsingInputBox();
+  }
+  removeButtonClicked(connectObject) {
+    //  removeSelectedItem();
+  }
+  exportButtonClicked(connectObject) {
+    //exportimport();
+  }
+});
+
 function buildPrefsWidget() {
   var self = this;
 
   var settings = Convenience.getSettings();
 
   this.Builder = new Gtk.Builder();
+  this.Builder.set_scope(new pwcalcBuilderScope());
   this.Builder.add_from_file(EXTENSIONDIR + "/pwcalc-settings.ui");
   this.MainWidget = Builder.get_object("main-widget");
   this.treeview = this.Builder.get_object("tree-treeview");
@@ -82,26 +116,25 @@ function buildPrefsWidget() {
     var l = getrecentURL();
     let textDialog = _("Remove Alias '%s' ?").replace("%s", l[ac]);
     let dialog = new Gtk.Dialog({
-      title: "Alias Removal"
+      title: "Alias Removal",
+      css_classes: ['dialog']
     });
+
     let label = new Gtk.Label({
-      label: textDialog
+     label: textDialog
     });
-    label.margin_bottom = 12;
+    let b = new Gtk.Box();
 
-    dialog.set_border_width(12);
-    dialog.set_modal(1);
+    //dialog.set_modal(1);
     dialog.set_resizable(0);
-    dialog.set_transient_for(self.MainWidget.get_toplevel());
+    dialog.set_transient_for(self.MainWidget.get_root());
 
-    let cancelbutton = dialog.add_button(Gtk.STOCK_CANCEL, 0);
-    let removebuton = dialog.add_button(Gtk.STOCK_REMOVE, 1);
-
-    cancelbutton.set_can_default(true);
-    dialog.set_default(cancelbutton);
+    let cancelbutton = dialog.add_button("Cancel", 0);
+    let removebuton = dialog.add_button("Remove", 1);
 
     let dialog_area = dialog.get_content_area();
-    dialog_area.pack_start(label, 0, 0, 0);
+    //dialog_area.prepend(label, 0, 0, 0);
+    dialog_area.append(b);
     dialog.connect("response", function(w, response_id) {
       if (response_id == 1) {
         l.splice(ac, 1);
@@ -110,8 +143,7 @@ function buildPrefsWidget() {
       }
       dialog.hide();
     });
-
-    dialog.show_all();
+    dialog.show();
   }
 
   var addItemUsingInputBox = function() {
@@ -126,15 +158,14 @@ function buildPrefsWidget() {
       label: textDialog
     });
 
-    dialog.set_border_width(12);
+    //dialog.set_border_width(12);
     dialog.set_modal(1);
     dialog.set_resizable(0);
-    dialog.set_transient_for(self.MainWidget.get_toplevel());
+    dialog.set_transient_for(self.MainWidget.get_root());
 
-    dialog.add_button(Gtk.STOCK_CANCEL, 0);
-    let d = dialog.add_button(Gtk.STOCK_OK, 1);
+    dialog.add_button("Cancel", 0);
+    let d = dialog.add_button("OK", 1);
 
-    d.set_can_default(true);
     d.sensitive = 0;
     let testAlias = function(location) {
       d.sensitive = 0;
@@ -144,12 +175,11 @@ function buildPrefsWidget() {
 
     entry.connect("changed", testAlias);
 
-    dialog.set_default(d);
     entry.activates_default = true;
 
-    let dialog_area = dialog.get_content_area();
-    dialog_area.pack_start(label, 0, 0, 0);
-    dialog_area.pack_start(entry, 0, 0, 0);
+    //let dialog_area = dialog.get_content_area();
+    //dialog_area.pack_start(label, 0, 0, 0);
+    //dialog_area.pack_start(entry, 0, 0, 0);
     dialog.connect("response", function(w, response_id) {
       let alias = entry.get_text();
       if (response_id == 1 && alias) {
@@ -163,7 +193,7 @@ function buildPrefsWidget() {
       return 0;
     });
 
-    dialog.show_all();
+    //dialog.show_all();
   };
 
   this.Builder.get_object("tree-toolbutton-add").connect("clicked", function() {
@@ -198,7 +228,7 @@ function buildPrefsWidget() {
     tb.text = JSON.stringify(getrecentURL());
 
     dialog.set_default(cancel);
-    dialog.set_transient_for(self.MainWidget.get_toplevel());
+    dialog.set_transient_for(self.MainWidget.get_root());
 
     dialog.connect("response", function(w, response_id) {
       if (response_id == 1) {
@@ -208,7 +238,7 @@ function buildPrefsWidget() {
       dialog.destroy();
       return 0;
     });
-    dialog.run();
+    dialog.show_all();
   }
 
   this.Builder.get_object("tree-toolbutton-export").connect("clicked", function() {
@@ -332,21 +362,20 @@ function buildPrefsWidget() {
   self.Builder.get_object("keep-copy-of-aliases-filename-button").connect("clicked", function() {
     let dialog = new Gtk.FileChooserDialog({
       title: _("Select Filename to Keep Aliases"),
-      transient_for: self.MainWidget.get_toplevel(),
+      transient_for: self.MainWidget.get_root(),
       action: Gtk.FileChooserAction.SAVE,
-      do_overwrite_confirmation: true,
       modal: true
     });
-    dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL);
-    dialog.add_button(Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT);
-    var res = dialog.run();
-    if (res == Gtk.ResponseType.ACCEPT) {
-      var filename = dialog.get_filename();
-      setString("keep-copy-of-aliases-filename", filename);
-    }
-    dialog.destroy();
+    dialog.add_button("Cancel", Gtk.ResponseType.CANCEL);
+    dialog.add_button("Save", Gtk.ResponseType.ACCEPT);
+    dialog.connect('response', function(res) {
+      if (res == Gtk.ResponseType.ACCEPT) {
+        var filename = dialog.get_filename();
+        setString("keep-copy-of-aliases-filename", filename);
+      }
+    });
+    dialog.show
   });
-
 
   settings.connect("changed", function(sender, key) {
     if (key == RECENT_URL_KEY)
