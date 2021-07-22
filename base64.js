@@ -174,3 +174,5 @@ base64.encode = function(s) {
     }
     return x.join('');
 }
+
+//module.exports={base64};

@@ -34,6 +34,7 @@
 .pwCalc .last {
 	border-radius:0px 0px 8px 8px;
 	border-color:black;
+	margin:0;
 }
 
 .pwCalc .last:focus {
@@ -47,4 +48,5 @@
 .pwCalc .first {
 	border-radius:8px 8px 0px 0px;
 	border-color:black;
+	margin:0;
 }

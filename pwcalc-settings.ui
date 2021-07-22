@@ -1,36 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
-<interface>
-  <requires lib="gtk+" version="3.10"/>
-  <object class="GtkAction" id="AddAction">
-    <property name="label" translatable="yes">Add</property>
-    <property name="tooltip" translatable="yes">Add Alias to List</property>
-    <property name="icon_name">list-add-symbolic</property>
-  </object>
-  <object class="GtkAction" id="ExportAction">
-    <property name="label" translatable="yes">Export</property>
-    <property name="tooltip" translatable="yes">Export/Import List of Aliases</property>
-    <property name="icon_name">send-to-symbolic</property>
-  </object>
-  <object class="GtkAction" id="RemoveAction">
-    <property name="label" translatable="yes">Remove</property>
-    <property name="tooltip" translatable="yes">Remove Alias from List</property>
-    <property name="icon_name">list-remove-symbolic</property>
-  </object>
+<interface domain="my-gettext-domain">
   <object class="GtkAdjustment" id="default-password-length-adjustment">
     <property name="upper">27</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">8</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">8</property>
   </object>
   <object class="GtkListStore" id="liststore">
     <columns>
-      <!-- column-name alias -->
       <column type="gchararray"/>
     </columns>
   </object>
   <object class="GtkListStore" id="password-methods">
     <columns>
-      <!-- column-name method -->
       <column type="gchararray"/>
     </columns>
     <data>
@@ -45,440 +26,310 @@
       </row>
     </data>
   </object>
-  <object class="GtkBox" id="main-widget">
-    <property name="height_request">600</property>
-    <property name="can_focus">False</property>
-    <property name="border_width">5</property>
+  <object class="GtkPaned" id="main-widget">
+    <property name="hexpand">1</property>
     <child>
-      <object class="GtkPaned" id="paned1">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
+      <object class="GtkGrid" id="left-grid">
+        <property name="can-focus">0</property>
+        <property name="margin-start">10</property>
+        <property name="margin-end">10</property>
+        <property name="margin-top">10</property>
+        <property name="margin-bottom">10</property>
         <child>
-          <object class="GtkGrid" id="left-grid">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="margin_right">5</property>
+          <object class="GtkScrolledWindow" id="scrolledwindow1">
+            <property name="vexpand">1</property>
+            <property name="hexpand">1</property>
+            <property name="has-frame">1</property>
             <child>
-              <object class="GtkScrolledWindow" id="tree-scrolledwindow">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="hexpand">True</property>
-                <property name="vexpand">True</property>
-                <property name="shadow_type">in</property>
-                <child>
-                  <object class="GtkTreeView" id="tree-treeview">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="headers_visible">False</property>
-                    <property name="enable_search">False</property>
-                    <property name="show_expanders">False</property>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="treeview-selection"/>
-                    </child>
-                  </object>
+              <object class="GtkTreeView" id="tree-treeview">
+                <property name="headers-visible">0</property>
+                <property name="enable-search">0</property>
+                <property name="show-expanders">0</property>
+                <child internal-child="selection">
+                  <object class="GtkTreeSelection" id="treeview-selection"/>
                 </child>
               </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">1</property>
-              </packing>
             </child>
-            <child>
-              <object class="GtkToolbar" id="tree-toolbar">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="icon_size">1</property>
-                <child>
-                  <object class="GtkToolButton" id="tree-toolbutton-add">
-                    <property name="use_action_appearance">True</property>
-                    <property name="related_action">AddAction</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="icon_name">list-add-symbolic</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="homogeneous">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkToolButton" id="tree-toolbutton-remove">
-                    <property name="use_action_appearance">True</property>
-                    <property name="related_action">RemoveAction</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkToolButton" id="tree-toolbutton-export">
-                    <property name="use_action_appearance">True</property>
-                    <property name="related_action">ExportAction</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Export</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <style>
-                  <class name="inline-toolbar"/>
-                </style>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="recent-aliases-label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="label" translatable="yes">Recent Aliases</property>
-                <attributes>
-                  <attribute name="weight" value="bold"/>
-                </attributes>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">1</property>
+            </layout>
           </object>
-          <packing>
-            <property name="resize">True</property>
-            <property name="shrink">True</property>
-          </packing>
         </child>
         <child>
-          <object class="GtkGrid" id="right-grid">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="margin_left">5</property>
-            <property name="row_spacing">7</property>
+          <object class="GtkBox" id="tree-toolbar">
+            <property name="can-focus">0</property>
             <child>
-              <object class="GtkBox" id="copy-to-clipboard-box">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="hexpand">True</property>
-                <property name="spacing">10</property>
-                <child>
-                  <object class="GtkLabel" id="copy-to-clipboard-label">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Copy to Clipboard</property>
-                    <property name="xalign">0</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSwitch" id="copy-to-clipboard-switch">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
+              <object class="GtkButton" id="tree-toolbutton-add">
+                <property name="can-focus">0</property>
+                <property name="icon-name">list-add-symbolic</property>
+                <signal name="clicked" handler="addButtonClicked" swapped="no"/>
               </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">3</property>
-              </packing>
             </child>
             <child>
-              <object class="GtkBox" id="copy-to-primary-box">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="hexpand">True</property>
-                <property name="spacing">10</property>
-                <child>
-                  <object class="GtkLabel" id="copy-to-primary-label">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Copy to Primary Selection</property>
-                    <property name="xalign">0</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSwitch" id="copy-to-primary-switch">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
+              <object class="GtkButton" id="tree-toolbutton-remove">
+                <property name="can-focus">0</property>
+                <property name="icon-name">list-remove-symbolic</property>
+                <signal name="clicked" handler="removeButtonClicked" swapped="no"/>
               </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">2</property>
-              </packing>
             </child>
             <child>
-              <object class="GtkBox" id="show-notification-box">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="hexpand">True</property>
-                <property name="spacing">10</property>
-                <child>
-                  <object class="GtkLabel" id="show-notification-label">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Show Copy Notification</property>
-                    <property name="xalign">0</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSwitch" id="show-notification-switch">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
+              <object class="GtkButton" id="tree-toolbutton-export">
+                <property name="can-focus">0</property>
+                <property name="icon-name">document-save-as-symbolic</property>
+                <signal name="clicked" handler="exportButtonClicked" swapped="no"/>
               </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">1</property>
-              </packing>
             </child>
+            <style>
+              <class name="toolbar"/>
+              <class name="inline-toolbar"/>
+            </style>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">2</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="recent-aliases-label">
+            <property name="can-focus">0</property>
+            <property name="halign">start</property>
+            <property name="label" translatable="yes">Recent Aliases</property>
+            <attributes>
+              <attribute name="weight" value="bold"></attribute>
+            </attributes>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">0</property>
+            </layout>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkGrid" id="right-grid">
+        <property name="can-focus">0</property>
+        <property name="margin-start">10</property>
+        <property name="margin-end">10</property>
+        <property name="margin-top">10</property>
+        <property name="margin-bottom">10</property>
+        <property name="row-spacing">7</property>
+        <child>
+          <object class="GtkBox" id="copy-to-clipboard-box">
+            <property name="can-focus">0</property>
+            <property name="hexpand">1</property>
+            <property name="spacing">10</property>
             <child>
-              <object class="GtkLabel" id="return-action-label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Actions on return-key in secret input</property>
+              <object class="GtkLabel" id="copy-to-clipboard-label">
+                <property name="hexpand">1</property>
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Copy to Clipboard</property>
                 <property name="xalign">0</property>
-                <attributes>
-                  <attribute name="weight" value="bold"/>
-                </attributes>
               </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
             </child>
             <child>
-              <object class="GtkSeparator" id="separator1">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
+              <object class="GtkSwitch" id="copy-to-clipboard-switch"></object>
+            </child>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">3</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="copy-to-primary-box">
+            <property name="can-focus">0</property>
+            <property name="hexpand">1</property>
+            <property name="spacing">10</property>
+            <child>
+              <object class="GtkLabel" id="copy-to-primary-label">
+                <property name="hexpand">1</property>
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Copy to Primary Selection</property>
+                <property name="xalign">0</property>
               </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">4</property>
-              </packing>
             </child>
             <child>
-              <object class="GtkGrid" id="auto-save-aliases-grid">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="row_spacing">5</property>
-                <property name="column_spacing">10</property>
+              <object class="GtkSwitch" id="copy-to-primary-switch"></object>
+            </child>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">2</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="show-notification-box">
+            <property name="can-focus">0</property>
+            <property name="hexpand">1</property>
+            <property name="spacing">10</property>
+            <child>
+              <object class="GtkLabel" id="show-notification-label">
+                <property name="hexpand">1</property>
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Show Copy Notification</property>
+                <property name="xalign">0</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSwitch" id="show-notification-switch"></object>
+            </child>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="return-action-label">
+            <property name="can-focus">0</property>
+            <property name="label" translatable="yes">Actions on return-key in secret input</property>
+            <property name="xalign">0</property>
+            <attributes>
+              <attribute name="weight" value="bold"></attribute>
+            </attributes>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">0</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSeparator" id="separator1">
+            <property name="can-focus">0</property>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">4</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="GtkGrid" id="auto-save-aliases-grid">
+            <property name="can-focus">0</property>
+            <property name="row-spacing">5</property>
+            <property name="column-spacing">10</property>
+            <child>
+              <object class="GtkLabel" id="auto-save-aliases-to-file">
+                <property name="can-focus">0</property>
+                <property name="hexpand">1</property>
+                <property name="label" translatable="yes">Auto-Save Aliases to File</property>
+                <property name="xalign">0</property>
+                <layout>
+                  <property name="column">0</property>
+                  <property name="row">0</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSwitch" id="keep-copy-of-aliases-in-file-switch">
+                <layout>
+                  <property name="column">1</property>
+                  <property name="row">0</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="keep-copy-of-aliases-filename-button">
+                <property name="receives-default">1</property>
                 <child>
-                  <object class="GtkLabel" id="auto-save-aliases-to-file">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="hexpand">True</property>
-                    <property name="label" translatable="yes">Auto-Save Aliases to File</property>
-                    <property name="xalign">0</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSwitch" id="keep-copy-of-aliases-in-file-switch">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="keep-copy-of-aliases-filename-button">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="image_position">right</property>
-                    <property name="always_show_image">True</property>
+                  <object class="GtkBox" id="keep-copy-of-aliases-filename-button-box">
+                    <property name="can-focus">0</property>
+                    <property name="spacing">10</property>
                     <child>
-                      <object class="GtkBox" id="keep-copy-of-aliases-filename-button-box">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="spacing">10</property>
-                        <child>
-                          <object class="GtkLabel" id="keep-copy-of-aliases-filename-label">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="ellipsize">middle</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkImage" id="keep-copy-of-aliases-save-image">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="stock">gtk-save</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
+                      <object class="GtkLabel" id="keep-copy-of-aliases-filename-label">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="ellipsize">middle</property>
+                        <property name="xalign">0</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImage" id="keep-copy-of-aliases-save-image">
+                        <property name="can-focus">0</property>
+                        <property name="icon-name">document-save</property>
                       </object>
                     </child>
                   </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
-                    <property name="width">2</property>
-                  </packing>
                 </child>
+                <layout>
+                  <property name="column">0</property>
+                  <property name="row">1</property>
+                  <property name="column-span">2</property>
+                </layout>
               </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">5</property>
-              </packing>
             </child>
-            <child>
-              <object class="GtkBox" id="password-length-box">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="spacing">10</property>
-                <child>
-                  <object class="GtkLabel" id="default-password-length-label">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Default Password Length</property>
-                    <property name="xalign">0</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSpinButton" id="default-password-length-spinbutton">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="input_purpose">number</property>
-                    <property name="adjustment">default-password-length-adjustment</property>
-                    <property name="numeric">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">7</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparator" id="separator2">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">6</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkBox" id="password-method-box">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="spacing">10</property>
-                <child>
-                  <object class="GtkLabel" id="password-method-label">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Password Method</property>
-                    <property name="xalign">0</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkComboBox" id="password-method-combobox">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="model">password-methods</property>
-                    <property name="id_column">0</property>
-                    <child>
-                      <object class="GtkCellRendererText"/>
-                      <attributes>
-                        <attribute name="text">0</attribute>
-                      </attributes>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">8</property>
-              </packing>
-            </child>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">5</property>
+            </layout>
           </object>
-          <packing>
-            <property name="resize">False</property>
-            <property name="shrink">True</property>
-          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="password-length-box">
+            <property name="can-focus">0</property>
+            <property name="spacing">10</property>
+            <child>
+              <object class="GtkLabel" id="default-password-length-label">
+                <property name="hexpand">1</property>
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Default Password Length</property>
+                <property name="xalign">0</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSpinButton" id="default-password-length-spinbutton">
+                <property name="adjustment">default-password-length-adjustment</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">7</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSeparator" id="separator2">
+            <property name="can-focus">0</property>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">6</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="password-method-box">
+            <property name="can-focus">0</property>
+            <property name="spacing">10</property>
+            <child>
+              <object class="GtkLabel" id="password-method-label">
+                <property name="hexpand">1</property>
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Password Method</property>
+                <property name="xalign">0</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkComboBox" id="password-method-combobox">
+                <property name="hexpand">1</property>
+                <property name="model">password-methods</property>
+                <property name="can-focus">0</property>
+                <property name="id-column">0</property>
+                <child>
+                  <object class="GtkCellRendererText"/>
+                  <attributes>
+                    <attribute name="text">0</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <layout>
+              <property name="column">0</property>
+              <property name="row">8</property>
+            </layout>
+          </object>
         </child>
       </object>
-      <packing>
-        <property name="expand">True</property>
-        <property name="fill">True</property>
-        <property name="position">0</property>
-      </packing>
     </child>
   </object>
 </interface>

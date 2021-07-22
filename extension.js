@@ -1,4 +1,4 @@
-const version = "1.1.5";
+const version = "1.1.6";
 
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
@@ -181,6 +181,7 @@ class PasswordCalculator extends PanelMenu.Button {
 			let pwd = calc(sec, url, len);
 			this.pwdText.set_text(this.obfuscate(pwd));
 			if (e && e.get_key_symbol() == Gdk.KEY_Return) {
+				global.log("pwcalc: this.copyAndSendNotification");
 				this.copyAndSendNotification(pwd);
 				this.addRecentURL(url);
 				this.menu.actor.hide();
@@ -209,11 +210,11 @@ class PasswordCalculator extends PanelMenu.Button {
 	copyAndSendNotification(pwd) {
 		if (this.CopyToClipboard) {
 			clipboard.set_text(CLIPBOARD_TYPE,pwd);
-			if (this.ShowCopyNotification) showMessage("Password Calculator: Password copied to clipboard.");
+			if (this.ShowCopyNotification) showMessage("Password copied to clipboard.");
 		}
 		if (this.CopyToPrimarySelection) {
 			clipboard.set_text(PRIMARY_TYPE,pwd);
-			if (this.ShowCopyNotification) showMessage("Password Calculator: Password copied to primary selection.");
+			if (this.ShowCopyNotification) showMessage("Password copied to primary selection.");
 		}
 	}
 	clear() {
@@ -348,9 +349,9 @@ function removeDuplicates(a) {
 function showMessage(text) { 
 	let source = new MessageTray.SystemNotificationSource();
 	Main.messageTray.add(source);
-	let notification = new MessageTray.Notification(source, text, null);
+	let notification = new MessageTray.Notification(source, "Password Calculator", text, {gicon: new Gio.ThemedIcon({name: 'dialog-password-symbolic'})});
 	notification.setTransient(true);
-	source.notify(notification);
+	source.showNotification(notification);
 }
 
 function hex2string(hex) {
