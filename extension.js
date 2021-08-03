@@ -1,10 +1,9 @@
-const version = "1.1.6";
+const version = "1.1.7";
 
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Main = imports.ui.main;
 const MessageTray = imports.ui.messageTray;
-const Lang = imports.lang;
 
 const {
 	Gdk, Gio, GLib, GObject, Shell, St
@@ -12,14 +11,18 @@ const {
 
 const Util = imports.misc.util;
 const Gettext = imports.gettext;
-const _ = Gettext.domain('pwCalc').gettext;
+const ExtensionUtils = imports.misc.extensionUtils;
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Me = ExtensionUtils.getCurrentExtension();
+const Domain = Gettext.domain(Me.metadata.uuid);
+const _ = Domain.gettext;
+const ngettext = Domain.ngettext;
+
 const Convenience = Me.imports.convenience;
 const Utils = Me.imports.utils;
 const Base64 = Me.imports.base64;
 
-let pwCalc, clipboard;
+let pwCalc;
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 const PRIMARY_TYPE = St.ClipboardType.PRIMARY;
 const RECENT_URL_KEY = 'recenturls';
@@ -127,7 +130,7 @@ class PasswordCalculator extends PanelMenu.Button {
 		this.menu.addMenuItem(this.urlCombo);
 
 		let item = new PopupMenu.PopupMenuItem(_("Settings"));
-		item.connect('activate', Lang.bind(this, this._onPreferencesActivate));
+		item.connect('activate', this._onPreferencesActivate);
 		this.menu.addMenuItem(item);
 
 		this.menu.connect('open-state-changed', function(sender,open) {
@@ -181,7 +184,6 @@ class PasswordCalculator extends PanelMenu.Button {
 			let pwd = calc(sec, url, len);
 			this.pwdText.set_text(this.obfuscate(pwd));
 			if (e && e.get_key_symbol() == Gdk.KEY_Return) {
-				global.log("pwcalc: this.copyAndSendNotification");
 				this.copyAndSendNotification(pwd);
 				this.addRecentURL(url);
 				this.menu.actor.hide();
@@ -208,13 +210,14 @@ class PasswordCalculator extends PanelMenu.Button {
 		}
 	}
 	copyAndSendNotification(pwd) {
+		let clipboard = St.Clipboard.get_default();
 		if (this.CopyToClipboard) {
 			clipboard.set_text(CLIPBOARD_TYPE,pwd);
-			if (this.ShowCopyNotification) showMessage("Password copied to clipboard.");
+			if (this.ShowCopyNotification) showMessage(_("Password copied to clipboard."));
 		}
 		if (this.CopyToPrimarySelection) {
 			clipboard.set_text(PRIMARY_TYPE,pwd);
-			if (this.ShowCopyNotification) showMessage("Password copied to primary selection.");
+			if (this.ShowCopyNotification) showMessage(_("Password copied to primary selection."));
 		}
 	}
 	clear() {
@@ -234,7 +237,7 @@ class PasswordCalculator extends PanelMenu.Button {
 				let item = new SuggestionMenuItem(list[i]);
 				item.actor.add_style_class_name("pwCalcSuggestion");
 				this.menu.addMenuItem(item,i+1);
-				item.connect('select', Lang.bind(this, this.urlSelected, list[i]));
+				item.connect('select', () => { this.urlSelected(list[i]); });
 				this.suggestionsItems.push(item);
 			}
 		}
@@ -246,14 +249,14 @@ class PasswordCalculator extends PanelMenu.Button {
 		for (let i=0;i<list.length;i++) {
 			let item = new RecentAliasMenuItem(list[i]);
 			this.urlCombo.menu.addMenuItem(item, i);
-			item.connect('select', Lang.bind(this, this.urlSelected, list[i]));
+			item.connect('select', () => { this.urlSelected(list[i]); });
 		}
 		let labeltext;
 		if (list.length==0) labeltext=_("No Recent Aliases");
 		else labeltext=_("Recent Aliases");
 		this.urlCombo.label.set_text(labeltext);
 	}
-	urlSelected(sender,URL) {
+	urlSelected(URL) {
 		this.updateSuggestions();
 		this.urlText.set_text(URL);
 		this.secretText.clutter_text.grab_key_focus();
@@ -429,10 +432,8 @@ var calculatePassword={
 };
 
 
-function init(metadata) {
-	let locales = metadata.path + "/locale";
-	Gettext.bindtextdomain('pwCalc', locales);
-	clipboard = St.Clipboard.get_default();
+function init() {
+	ExtensionUtils.initTranslations(Me.metadata.uuid);
 }
 
 function enable() {
