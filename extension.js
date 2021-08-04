@@ -20,7 +20,6 @@ const ngettext = Domain.ngettext;
 
 const Convenience = Me.imports.convenience;
 const Utils = Me.imports.utils;
-const Base64 = Me.imports.base64;
 
 let pwCalc;
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
@@ -357,6 +356,14 @@ function showMessage(text) {
 	source.showNotification(notification);
 }
 
+function hex2bytearray(hex) {
+	var array = hex.match(/.{2}/g);
+	var bytes = new Uint8Array(20);
+	for (var i = 0; i < array.length; i++)
+		bytes[i] = parseInt(array[i], 16);
+	return bytes;
+}
+
 function hex2string(hex) {
 	var array = hex.match(/.{2}/g);
 	var bytes = new Uint8Array(20);
@@ -372,11 +379,24 @@ function FilledArray(len,value) {
 	return a;
 }
 
+function sha1bytes(text) {
+	var c = new GLib.Checksum(GLib.ChecksumType.SHA1);
+	c.update(text);
+	//return c.get_digest();
+	return hex2bytearray(c.get_string());
+}
+function sha1string(text) {
+	var c = new GLib.Checksum(GLib.ChecksumType.SHA1);
+	c.update(text);
+	return c.get_string();
+}
+
 var calculatePassword={
 	SHA1: function(secret, domain, length) {
 		if (secret==""||domain=="") return "";
-		var sha1 = Utils.Sha1.hash(secret + domain);
-		var base64 = Base64.base64.encode(hex2string(sha1));
+		var text = secret + domain;
+		var sha1 = sha1bytes(text);
+		var base64 = GLib.base64_encode(sha1);
 		return base64.substring(0, length);
 	},
 	HMAC_SHA1: function(secret, domain, length) {
@@ -390,7 +410,7 @@ var calculatePassword={
 		domain = Utils.Utf8.encode(domain);
 
 		if (secret.length > 64)
-			secret = hex2string(Utils.Sha1.hash(secret, false));
+			secret = sha1string(secret);
 
 		for (i = 0; i < secret.length; i++) {
 			i_key_b[i] ^= secret.charCodeAt(i);
@@ -399,9 +419,9 @@ var calculatePassword={
 		i_key_b = String.fromCharCode.apply(null, i_key_b);
 		o_key_b = String.fromCharCode.apply(null, o_key_b);
 
-		sha1 = hex2string(Utils.Sha1.hash(i_key_b + domain, false));
-		sha1 = hex2string(Utils.Sha1.hash(o_key_b + sha1, false));
-		var base64 = Base64.base64.encode(sha1);
+		sha1 = sha1string(i_key_b + domain);
+		sha1 = sha1bytes(o_key_b + sha1);
+		var base64 = GLib.base64_encode(sha1);
 		return base64.substring(0, length);
 	},
 	HMAC_SHA1_INEXACT: function(secret, domain, length) {
@@ -415,7 +435,7 @@ var calculatePassword={
 		domain = Utils.Utf8.encode(domain);
 
 		if (secret.length > 64)
-			secret = Utils.Sha1.hash(secret, false);
+			secret = sha1sting(secret);
 
 		for (i = 0, j = secret.length; i < j; i += 1) {
 			i_key_b[i] ^= secret.charCodeAt(i);
@@ -424,9 +444,9 @@ var calculatePassword={
 		i_key_b = String.fromCharCode.apply(null, i_key_b);
 		o_key_b = String.fromCharCode.apply(null, o_key_b);
 
-		sha1 =            Utils.Sha1.hash(i_key_b + domain, false);
-		sha1 = hex2string(Utils.Sha1.hash(o_key_b + sha1, false));
-		var base64 = Base64.base64.encode(sha1);
+		sha1 = ""; //Utils.Sha1.hash(i_key_b + domain, false);
+		sha1 = sha1bytes(o_key_b + sha1);
+		var base64 = GLib.base64_encode(sha1);
 		return base64.substring(0, length);
 	}
 };
@@ -439,6 +459,9 @@ function init() {
 function enable() {
 	pwCalc = new PasswordCalculator();
 	Main.panel.addToStatusArea('pwCalc', pwCalc);
+	global.log("SHA1              Test: " + calculatePassword.SHA1("secret","domain",16));
+	global.log("HMAC-SHA          Test: " + calculatePassword.HMAC_SHA1("secret","domain",16));
+	global.log("HMAC-SHA1-INEXACT Test: " + calculatePassword.HMAC_SHA1_INEXACT("secret","domain",16));
 }
 
 function disable() {
