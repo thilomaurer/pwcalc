@@ -456,12 +456,27 @@ function init() {
 	ExtensionUtils.initTranslations(Me.metadata.uuid);
 }
 
+function error_pw_validation(type, ref, val) {
+	if (ref!=val)
+		global.log("Test "+type+" failed: reference value is "+ref + " but calculated " + val);
+}
+
+function validate_pw_calculation() {
+	let sha1_ref = "pFWU9V+5Ns6ie+4F";
+	let hmac_sha1_ref = "p2FCQnf42dGKh5JU";
+	let hmac_sha1_inexact_ref = "gT7nAfjjcnOQDUIc";
+	let sha1_val = calculatePassword.SHA1("secret","domain",16);
+	let hmac_sha1_val = calculatePassword.HMAC_SHA1("secret","domain",16);
+	let hmac_sha1_inexact_val = calculatePassword.HMAC_SHA1_INEXACT("secret","domain",16);
+	error_pw_validation("SHA1", sha1_ref,sha1_val);
+	error_pw_validation("HMAC_SHA1", hmac_sha1_ref,  hmac_sha1_val);
+	error_pw_validation("HMAC_SHA1_INEXACT", hmac_sha1_inexact_ref, hmac_sha1_inexact_val);
+}
+
 function enable() {
 	pwCalc = new PasswordCalculator();
 	Main.panel.addToStatusArea('pwCalc', pwCalc);
-	global.log("SHA1              Test: " + calculatePassword.SHA1("secret","domain",16));
-	global.log("HMAC-SHA          Test: " + calculatePassword.HMAC_SHA1("secret","domain",16));
-	global.log("HMAC-SHA1-INEXACT Test: " + calculatePassword.HMAC_SHA1_INEXACT("secret","domain",16));
+    validate_pw_calculation();
 }
 
 function disable() {
