@@ -18,7 +18,6 @@ const Domain = Gettext.domain(Me.metadata.uuid);
 const _ = Domain.gettext;
 const ngettext = Domain.ngettext;
 
-const Convenience = Me.imports.convenience;
 const Utils = Me.imports.utils;
 
 let pwCalc;
@@ -261,7 +260,7 @@ class PasswordCalculator extends PanelMenu.Button {
 		this.secretText.clutter_text.grab_key_focus();
 	}
 	loadConfig() {
-		this.settings = Convenience.getSettings();
+		this.settings = ExtensionUtils.getSettings();
 		let self = this;
 		this._settingsC = this.settings.connect("changed::"+RECENT_URL_KEY,function(a,key) {
 			if (self.KeepCopyOfAliasesInFile) {

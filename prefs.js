@@ -36,7 +36,6 @@ const _ = Gettext.gettext;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
 const EXTENSIONDIR = Me.dir.get_path();
 
 //load CSS from preferences GTK Window
@@ -90,7 +89,7 @@ const pwcalcBuilderScope = GObject.registerClass({
 function buildPrefsWidget() {
   var self = this;
 
-  var settings = Convenience.getSettings();
+  var settings = ExtensionUtils.getSettings();
 
   this.Builder = new Gtk.Builder();
   this.Builder.set_scope(new pwcalcBuilderScope());
