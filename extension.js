@@ -485,6 +485,7 @@ function enable() {
     validate_pw_calculation();
 	pwCalc = new PasswordCalculator();
 	Main.panel.addToStatusArea('pwCalc', pwCalc);
+    validate_pw_calculation();
 }
 
 function disable() {
