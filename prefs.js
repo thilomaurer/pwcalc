@@ -36,7 +36,6 @@ const _ = Gettext.gettext;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
 const EXTENSIONDIR = Me.dir.get_path();
 
 //load CSS from preferences GTK Window
@@ -90,7 +89,7 @@ const pwcalcBuilderScope = GObject.registerClass({
 function buildPrefsWidget() {
   var self = this;
 
-  var settings = Convenience.getSettings();
+  var settings = ExtensionUtils.getSettings();
 
   this.Builder = new Gtk.Builder();
   this.Builder.set_scope(new pwcalcBuilderScope());
@@ -116,16 +115,15 @@ function buildPrefsWidget() {
     var l = getrecentURL();
     let textDialog = _("Remove Alias '%s' ?").replace("%s", l[ac]);
     let dialog = new Gtk.Dialog({
-      title: "Alias Removal",
-      css_classes: ['dialog']
+      title: _("Alias Removal")
     });
 
     let label = new Gtk.Label({
-     label: textDialog
+		label: textDialog,
+	    css_classes: [ "mylabel" ]
     });
-    let b = new Gtk.Box();
 
-    //dialog.set_modal(1);
+    dialog.set_modal(1);
     dialog.set_resizable(0);
     dialog.set_transient_for(self.MainWidget.get_root());
 
@@ -133,8 +131,7 @@ function buildPrefsWidget() {
     let removebuton = dialog.add_button("Remove", 1);
 
     let dialog_area = dialog.get_content_area();
-    //dialog_area.prepend(label, 0, 0, 0);
-    dialog_area.append(b);
+    dialog_area.prepend(label);
     dialog.connect("response", function(w, response_id) {
       if (response_id == 1) {
         l.splice(ac, 1);
@@ -147,18 +144,18 @@ function buildPrefsWidget() {
   }
 
   var addItemUsingInputBox = function() {
-    let textDialog = _("New alias");
+    let textDialog = _("Enter new alias");
     let dialog = new Gtk.Dialog({
-      title: ""
+		title: _("Add new alias")
     });
-    let entry = new Gtk.Entry();
-    entry.margin_top = 12;
-    entry.margin_bottom = 12;
+    let entry = new Gtk.Entry({
+		css_classes: [ "mylabel" ]
+	});
     let label = new Gtk.Label({
-      label: textDialog
+		label: textDialog,
+		css_classes: [ "mylabel" ]
     });
 
-    //dialog.set_border_width(12);
     dialog.set_modal(1);
     dialog.set_resizable(0);
     dialog.set_transient_for(self.MainWidget.get_root());
@@ -177,9 +174,9 @@ function buildPrefsWidget() {
 
     entry.activates_default = true;
 
-    //let dialog_area = dialog.get_content_area();
-    //dialog_area.pack_start(label, 0, 0, 0);
-    //dialog_area.pack_start(entry, 0, 0, 0);
+    let dialog_area = dialog.get_content_area();
+    dialog_area.append(label);
+    dialog_area.append(entry);
     dialog.connect("response", function(w, response_id) {
       let alias = entry.get_text();
       if (response_id == 1 && alias) {
@@ -193,7 +190,7 @@ function buildPrefsWidget() {
       return 0;
     });
 
-    //dialog.show_all();
+    dialog.show();
   };
 
   this.Builder.get_object("tree-toolbutton-add").connect("clicked", function() {

@@ -18,9 +18,7 @@ const Domain = Gettext.domain(Me.metadata.uuid);
 const _ = Domain.gettext;
 const ngettext = Domain.ngettext;
 
-const Convenience = Me.imports.convenience;
 const Utils = Me.imports.utils;
-const Base64 = Me.imports.base64;
 
 let pwCalc;
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
@@ -150,11 +148,11 @@ class PasswordCalculator extends PanelMenu.Button {
 		let keys = this.recentURL;
 		if (this.LastVersion == "undefined" && type == "HMAC_SHA1") {
 			this.PasswordMethod = "HMAC_SHA1_INEXACT";
-			global.log("Password Calculator: Setting password-method to HMC-SHA1_INEXACT, since it is the method used before.");
+			global.log(Me.metadata.uuid + ": Setting password-method to HMC-SHA1_INEXACT, since it is the method used before.");
 		} else if (type == "__compat__") {
 			if (keys.length>0) {
 				this.PasswordMethod = "SHA1";
-				global.log("Password Calculator: Initializing password-method to SHA1 due to preexisting aliases");
+				global.log(Me.metadata.uuid + ": Initializing password-method to SHA1 due to preexisting aliases");
 			} else {
 				this.PasswordMethod = "HMAC_SHA1";
 			}
@@ -262,14 +260,14 @@ class PasswordCalculator extends PanelMenu.Button {
 		this.secretText.clutter_text.grab_key_focus();
 	}
 	loadConfig() {
-		this.settings = Convenience.getSettings();
+		this.settings = ExtensionUtils.getSettings();
 		let self = this;
 		this._settingsC = this.settings.connect("changed::"+RECENT_URL_KEY,function(a,key) {
 			if (self.KeepCopyOfAliasesInFile) {
 				let fn=self.KeepCopyOfAliasesFilename;
 				let json=JSON.stringify(self.recentURL,null,"\t");
 				let success=GLib.file_set_contents(fn,json+"\n");
-				if (success==false) global.log("pwcalc: Unable to write to file "+fn);
+				if (success==false) global.log(Me.metadata.uuid + ": Unable to write to file "+fn);
 			}
 		});
 	}
@@ -357,12 +355,28 @@ function showMessage(text) {
 	source.showNotification(notification);
 }
 
+function hex2bytearray(hex) {
+	var array = hex.match(/.{2}/g);
+	var bytes = new Uint8Array(20);
+	for (var i = 0; i < array.length; i++)
+		bytes[i] = parseInt(array[i], 16);
+	return bytes;
+}
+
 function hex2string(hex) {
 	var array = hex.match(/.{2}/g);
 	var bytes = new Uint8Array(20);
 	for (var i = 0; i < array.length; i++)
 		bytes[i] = parseInt(array[i], 16);
 	return String.fromCharCode.apply(null, bytes);
+}
+
+function string2bytearray(str) {
+	var bytes = new Uint8Array(str.length);
+	for (var i = 0; i < str.length; i++) {
+		bytes[i]=str.charCodeAt(i);
+	}
+	return bytes;
 }
 
 function FilledArray(len,value) {
@@ -372,11 +386,28 @@ function FilledArray(len,value) {
 	return a;
 }
 
+function sha1bytes(text) {
+	var c = new GLib.Checksum(GLib.ChecksumType.SHA1);
+	c.update(text);
+	//return c.get_digest();
+	return hex2bytearray(c.get_string());
+}
+function sha1string(text) {
+	var c = new GLib.Checksum(GLib.ChecksumType.SHA1);
+	c.update(text);
+	return c.get_string();
+}
+
+function uint8array_concat(a,b) {
+	return new Uint8Array([...a, ...b]);
+}
+
 var calculatePassword={
 	SHA1: function(secret, domain, length) {
 		if (secret==""||domain=="") return "";
-		var sha1 = Utils.Sha1.hash(secret + domain);
-		var base64 = Base64.base64.encode(hex2string(sha1));
+		var text = secret + domain;
+		var sha1 = sha1bytes(text);
+		var base64 = GLib.base64_encode(sha1);
 		return base64.substring(0, length);
 	},
 	HMAC_SHA1: function(secret, domain, length) {
@@ -386,22 +417,20 @@ var calculatePassword={
 		var o_key_b = FilledArray(64,0x5c);
 		var i, j, sha1;
 
-		secret = Utils.Utf8.encode(secret);
-		domain = Utils.Utf8.encode(domain);
+		secret = string2bytearray(Utils.Utf8.encode(secret));
+		domain = string2bytearray(Utils.Utf8.encode(domain));
 
 		if (secret.length > 64)
-			secret = hex2string(Utils.Sha1.hash(secret, false));
+			secret = sha1string(secret);
 
 		for (i = 0; i < secret.length; i++) {
-			i_key_b[i] ^= secret.charCodeAt(i);
-			o_key_b[i] ^= secret.charCodeAt(i);
+			i_key_b[i] ^= secret[i];
+			o_key_b[i] ^= secret[i];
 		}
-		i_key_b = String.fromCharCode.apply(null, i_key_b);
-		o_key_b = String.fromCharCode.apply(null, o_key_b);
 
-		sha1 = hex2string(Utils.Sha1.hash(i_key_b + domain, false));
-		sha1 = hex2string(Utils.Sha1.hash(o_key_b + sha1, false));
-		var base64 = Base64.base64.encode(sha1);
+		sha1 = sha1bytes(uint8array_concat(i_key_b,domain));
+		sha1 = sha1bytes(uint8array_concat(o_key_b,sha1));
+		var base64 = GLib.base64_encode(sha1);
 		return base64.substring(0, length);
 	},
 	HMAC_SHA1_INEXACT: function(secret, domain, length) {
@@ -411,22 +440,19 @@ var calculatePassword={
 		var o_key_b = FilledArray(64,0x5c);
 		var i, j, sha1;
 
-		secret = Utils.Utf8.encode(secret);
-		domain = Utils.Utf8.encode(domain);
+		secret = string2bytearray(Utils.Utf8.encode(secret));
+		domain = string2bytearray(Utils.Utf8.encode(domain));
 
 		if (secret.length > 64)
-			secret = Utils.Sha1.hash(secret, false);
+			secret = sha1sting(secret);
 
 		for (i = 0, j = secret.length; i < j; i += 1) {
-			i_key_b[i] ^= secret.charCodeAt(i);
-			o_key_b[i] ^= secret.charCodeAt(i);
+			i_key_b[i] ^= secret[i];
+			o_key_b[i] ^= secret[i];
 		}
-		i_key_b = String.fromCharCode.apply(null, i_key_b);
-		o_key_b = String.fromCharCode.apply(null, o_key_b);
-
-		sha1 =            Utils.Sha1.hash(i_key_b + domain, false);
-		sha1 = hex2string(Utils.Sha1.hash(o_key_b + sha1, false));
-		var base64 = Base64.base64.encode(sha1);
+		sha1 = string2bytearray(sha1string(uint8array_concat(i_key_b,domain)));
+		sha1 = sha1bytes(uint8array_concat(o_key_b,sha1));
+		var base64 = GLib.base64_encode(sha1);
 		return base64.substring(0, length);
 	}
 };
@@ -438,7 +464,9 @@ function init() {
 
 function error_pw_validation(type, ref, val) {
 	if (ref!=val)
-		global.log("Test "+type+" failed: reference value is "+ref + " but calulated " + val);
+		global.log(Me.metadata.uuid + ": Test "+type+" failed: reference value is "+ref + " but calculated " + val);
+	else
+		global.log(Me.metadata.uuid + ": Test "+type+" success.");
 }
 
 function validate_pw_calculation() {
@@ -454,6 +482,7 @@ function validate_pw_calculation() {
 }
 
 function enable() {
+    validate_pw_calculation();
 	pwCalc = new PasswordCalculator();
 	Main.panel.addToStatusArea('pwCalc', pwCalc);
     validate_pw_calculation();
