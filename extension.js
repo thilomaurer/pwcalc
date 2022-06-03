@@ -75,8 +75,7 @@ class PasswordCalculator extends PanelMenu.Button {
 		this.updateRecentURL();
 	}
 	_onPreferencesActivate() {
-		Util.spawn(["gnome-shell-extension-prefs","pwcalc@thilomaurer.de"]);
-		return 0;
+		ExtensionUtils.openPrefs();
 	}
 	setupUI() {
 

@@ -29,7 +29,6 @@ const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
-const Lang = imports.lang;
 
 const Gettext = imports.gettext.domain('pwCalc');
 const _ = Gettext.gettext;
@@ -73,16 +72,6 @@ const pwcalcBuilderScope = GObject.registerClass({
       throw new Error(`${handlerName} is undefined`);
 
     return this[handlerName].bind(connectObject || this);
-  }
-
-  addButtonClicked(connectObject) {
-    //    addItemUsingInputBox();
-  }
-  removeButtonClicked(connectObject) {
-    //  removeSelectedItem();
-  }
-  exportButtonClicked(connectObject) {
-    //exportimport();
   }
 });
 
