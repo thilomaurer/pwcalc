@@ -25,15 +25,16 @@
  *
  */
 
-const Gtk = imports.gi.Gtk;
-const Gdk = imports.gi.Gdk;
-const Gio = imports.gi.Gio;
-const GObject = imports.gi.GObject;
+import Adw from 'gi://Adw';
+import Gdk from 'gi://Gdk';
+import Gtk from 'gi://Gtk';
+import GObject from 'gi://GObject';
 
 const Gettext = imports.gettext.domain('pwCalc');
 const _ = Gettext.gettext;
 
-const ExtensionUtils = imports.misc.extensionUtils;
+import * as ExtensionUtils from 'resource:///org/gnome/shell/misc/extensionUtils.js';
+
 const Me = ExtensionUtils.getCurrentExtension();
 const EXTENSIONDIR = Me.dir.get_path();
 
@@ -54,11 +55,25 @@ const KEEP_COPY_OF_ALIASES_FILENAME_KEY = 'keep-copy-of-aliases-filename';
 const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
 const PASSWORD_METHOD_KEY = 'password-method';
 
-/*
-   Shell-extensions handlers
-*/
 
-function init() {}
+import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+
+export default class pwcalcExtensionPreferences extends ExtensionPreferences {
+    fillPreferencesWindow(window) {
+        window._settings = this.getSettings();
+
+        const page = new Adw.PreferencesPage();
+
+        page.add(buildPrefsWidget());
+/*
+        const group = new Adw.PreferencesGroup({
+            title: _('Group Title'),
+        });
+        page.add(group);
+*/
+        window.add(page);
+    }
+}
 
 const pwcalcBuilderScope = GObject.registerClass({
   Implements: [Gtk.BuilderScope],

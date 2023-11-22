@@ -1,26 +1,31 @@
 const version = "1.1.7";
 
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const Main = imports.ui.main;
-const MessageTray = imports.ui.messageTray;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
-const {
-	Gdk, Gio, GLib, GObject, Shell, St
-} = imports.gi;
+import Gdk from 'gi://Gdk';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import St from 'gi://St';
 
-const Util = imports.misc.util;
 const Gettext = imports.gettext;
-const ExtensionUtils = imports.misc.extensionUtils;
 
-const Me = ExtensionUtils.getCurrentExtension();
-const Domain = Gettext.domain(Me.metadata.uuid);
-const _ = Domain.gettext;
-const ngettext = Domain.ngettext;
+import * as ExtensionUtils from 'resource:///org/gnome/shell/misc/extensionUtils.js';
 
-const Utils = Me.imports.utils;
+
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+
+//const Me = ExtensionUtils.getCurrentExtension();
+//const Domain = Gettext.domain(Me.metadata.uuid);
+//const _ = Domain.gettext;
+
+import * as Utils from './utils.js';
 
 let pwCalc;
+let uuid;
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 const PRIMARY_TYPE = St.ClipboardType.PRIMARY;
 const RECENT_URL_KEY = 'recenturls';
@@ -32,6 +37,27 @@ const KEEP_COPY_OF_ALIASES_FILENAME_KEY = 'keep-copy-of-aliases-filename';
 const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
 const PASSWORD_METHOD_KEY = 'password-method';
 const LAST_VERSION_KEY = 'last-version';
+
+
+export default class pwcalcExtension extends Extension {
+
+		//Consider this method deprecated. Only specify gettext-domain in metadata.json. GNOME Shell can automatically initiate the translation for you when it sees the gettext-domain key in metadata.json.
+		//ExtensionUtils.initTranslations(this.uuid);
+
+    enable() {
+        this._settings = this.getSettings();
+		uuid = this.uuid;
+		validate_pw_calculation();
+		pwCalc = new PasswordCalculator(this._settings);
+		Main.panel.addToStatusArea('pwCalc', pwCalc);
+    }
+
+    disable() {
+		pwCalc.destroy();
+		pwCalc = null;
+        this._settings = null;
+    }
+}
 
 let RecentAliasMenuItem = GObject.registerClass({
 	Signals: {
@@ -66,8 +92,9 @@ let SuggestionMenuItem = GObject.registerClass({
 
 let PasswordCalculator = GObject.registerClass(
 class PasswordCalculator extends PanelMenu.Button {
-	_init() {
+	_init(_settings) {
 		super._init(0, 'PasswordCalculator', false);
+		this.settings=_settings;
 		this.suggestionsItems=[];
 		this.loadConfig();
 		this.compat_password_method();
@@ -147,11 +174,11 @@ class PasswordCalculator extends PanelMenu.Button {
 		let keys = this.recentURL;
 		if (this.LastVersion == "undefined" && type == "HMAC_SHA1") {
 			this.PasswordMethod = "HMAC_SHA1_INEXACT";
-			global.log(Me.metadata.uuid + ": Setting password-method to HMC-SHA1_INEXACT, since it is the method used before.");
+			console.info(uuid + ": Setting password-method to HMC-SHA1_INEXACT, since it is the method used before.");
 		} else if (type == "__compat__") {
 			if (keys.length>0) {
 				this.PasswordMethod = "SHA1";
-				global.log(Me.metadata.uuid + ": Initializing password-method to SHA1 due to preexisting aliases");
+				console.info(uuid + ": Initializing password-method to SHA1 due to preexisting aliases");
 			} else {
 				this.PasswordMethod = "HMAC_SHA1";
 			}
@@ -259,14 +286,13 @@ class PasswordCalculator extends PanelMenu.Button {
 		this.secretText.clutter_text.grab_key_focus();
 	}
 	loadConfig() {
-		this.settings = ExtensionUtils.getSettings();
 		let self = this;
 		this._settingsC = this.settings.connect("changed::"+RECENT_URL_KEY,function(a,key) {
 			if (self.KeepCopyOfAliasesInFile) {
 				let fn=self.KeepCopyOfAliasesFilename;
 				let json=JSON.stringify(self.recentURL,null,"\t");
 				let success=GLib.file_set_contents(fn,json+"\n");
-				if (success==false) global.log(Me.metadata.uuid + ": Unable to write to file "+fn);
+				if (success==false) console.error(uuid + ": Unable to write to file "+fn);
 			}
 		});
 	}
@@ -456,16 +482,11 @@ var calculatePassword={
 	}
 };
 
-
-function init() {
-	ExtensionUtils.initTranslations(Me.metadata.uuid);
-}
-
 function error_pw_validation(type, ref, val) {
 	if (ref!=val)
-		global.log(Me.metadata.uuid + ": Test "+type+" failed: reference value is "+ref + " but calculated " + val);
+		console.error(uuid + ": Test "+type+" failed: reference value is "+ref + " but calculated " + val);
 	else
-		global.log(Me.metadata.uuid + ": Test "+type+" success.");
+		console.info(uuid + ": Test "+type+" success.");
 }
 
 function validate_pw_calculation() {
@@ -480,14 +501,3 @@ function validate_pw_calculation() {
 	error_pw_validation("HMAC_SHA1_INEXACT", hmac_sha1_inexact_ref, hmac_sha1_inexact_val);
 }
 
-function enable() {
-    validate_pw_calculation();
-	pwCalc = new PasswordCalculator();
-	Main.panel.addToStatusArea('pwCalc', pwCalc);
-    validate_pw_calculation();
-}
-
-function disable() {
-	pwCalc.destroy();
-	pwCalc = null;
-}
