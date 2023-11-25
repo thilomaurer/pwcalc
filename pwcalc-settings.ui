@@ -1,329 +1,205 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<interface domain="my-gettext-domain">
-  <object class="GtkAdjustment" id="default-password-length-adjustment">
-    <property name="upper">27</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">8</property>
-  </object>
-  <object class="GtkListStore" id="liststore">
-    <columns>
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="password-methods">
-    <columns>
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0">SHA1</col>
-      </row>
-      <row>
-        <col id="0">HMAC_SHA1</col>
-      </row>
-      <row>
-        <col id="0">HMAC_SHA1_INEXACT</col>
-      </row>
-    </data>
-  </object>
-  <object class="GtkPaned" id="main-widget">
-    <property name="hexpand">1</property>
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.16.0 -->
+<interface>
+  <!-- interface-name pwcalc-settings.ui -->
+  <requires lib="gtk" version="4.10"/>
+  <requires lib="libadwaita" version="1.4"/>
+  <object class="AdwPreferencesWindow">
     <child>
-      <object class="GtkGrid" id="left-grid">
-        <property name="can-focus">0</property>
-        <property name="margin-start">10</property>
-        <property name="margin-end">10</property>
-        <property name="margin-top">10</property>
-        <property name="margin-bottom">10</property>
+      <object class="AdwPreferencesPage" id="settings-page">
+        <property name="icon-name">applications-system</property>
+        <property name="title">Settings</property>
         <child>
-          <object class="GtkScrolledWindow" id="scrolledwindow1">
-            <property name="vexpand">1</property>
-            <property name="hexpand">1</property>
-            <property name="has-frame">1</property>
+          <object class="AdwPreferencesGroup" id="pwgen-group">
+            <property name="description">Settings that define the password generation method</property>
+            <property name="title">Password Generation</property>
+            <property name="width-request">400</property>
             <child>
-              <object class="GtkTreeView" id="tree-treeview">
-                <property name="headers-visible">0</property>
-                <property name="enable-search">0</property>
-                <property name="show-expanders">0</property>
-                <child internal-child="selection">
-                  <object class="GtkTreeSelection" id="treeview-selection"/>
+              <object class="AdwComboRow">
+                <property name="icon-name">accessories-calculator</property>
+                <property name="model">
+                  <object class="GtkStringList">
+                    <items>
+                      <item>SHA1</item>
+                      <item>HMAC_SHA1</item>
+                      <item>HMAC_SHA1_INEXACT</item>
+                    </items>
+                  </object>
+                </property>
+                <property name="subtitle">The algorithm used to calculate the password from alias and secret</property>
+                <property name="title">Password Method</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwActionRow">
+                <property name="icon-name">gcr-password</property>
+                <property name="subtitle">The number of password-characters to generate</property>
+                <property name="title">Password Length</property>
+                <child>
+                  <object class="GtkSpinButton">
+                    <property name="margin-bottom">12</property>
+                    <property name="margin-top">12</property>
+                  </object>
                 </child>
               </object>
             </child>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">1</property>
-            </layout>
           </object>
         </child>
         <child>
-          <object class="GtkBox" id="tree-toolbar">
-            <property name="can-focus">0</property>
+          <object class="AdwPreferencesGroup" id="behavior-group">
+            <property name="description">Setting that define the behavior of this extension</property>
+            <property name="title">Extension Behavior</property>
+            <property name="width-request">400</property>
             <child>
-              <object class="GtkButton" id="tree-toolbutton-add">
-                <property name="can-focus">0</property>
-                <property name="icon-name">list-add-symbolic</property>
+              <object class="AdwActionRow">
+                <property name="subtitle">Keep the list of aliases in the selected file in sync with this Extenstion</property>
+                <property name="title">Auto-Save Aliases to File</property>
+                <child>
+                  <object class="GtkButton" id="keep-copy-of-aliases-filename-button">
+                    <property name="margin-bottom">16</property>
+                    <property name="margin-top">16</property>
+                    <property name="receives-default">1</property>
+                    <child>
+                      <object class="GtkBox" id="keep-copy-of-aliases-filename-button-box">
+                        <property name="can-focus">0</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkLabel" id="keep-copy-of-aliases-filename-label">
+                            <property name="can-focus">0</property>
+                            <property name="ellipsize">middle</property>
+                            <property name="hexpand">1</property>
+                            <property name="xalign">0</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkImage" id="keep-copy-of-aliases-save-image">
+                            <property name="can-focus">0</property>
+                            <property name="icon-name">document-save-symbolic</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
             </child>
             <child>
-              <object class="GtkButton" id="tree-toolbutton-remove">
-                <property name="can-focus">0</property>
-                <property name="icon-name">list-remove-symbolic</property>
+              <object class="AdwActionRow">
+                <property name="subtitle">On Return-Key, notify when the generated password as copied into the "Clipboard" or "Primary Selection"</property>
+                <property name="title">Show Copy Notification</property>
+                <child>
+                  <object class="GtkSwitch">
+                    <property name="margin-bottom">16</property>
+                    <property name="margin-top">16</property>
+                  </object>
+                </child>
               </object>
             </child>
             <child>
-              <object class="GtkButton" id="tree-toolbutton-export">
-                <property name="can-focus">0</property>
-                <property name="icon-name">document-save-as-symbolic</property>
+              <object class="AdwActionRow">
+                <property name="subtitle">On Return-Key, copy the generated password to the "Clipboard"</property>
+                <property name="title">Copy to Clipboard</property>
+                <child>
+                  <object class="GtkSwitch">
+                    <property name="margin-bottom">16</property>
+                    <property name="margin-top">16</property>
+                  </object>
+                </child>
               </object>
             </child>
-            <style>
-              <class name="toolbar"/>
-              <class name="inline-toolbar"/>
-            </style>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">2</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="GtkLabel" id="recent-aliases-label">
-            <property name="can-focus">0</property>
-            <property name="halign">start</property>
-            <property name="label" translatable="yes">Recent Aliases</property>
-            <attributes>
-              <attribute name="weight" value="bold"></attribute>
-            </attributes>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">0</property>
-            </layout>
+            <child>
+              <object class="AdwActionRow">
+                <property name="subtitle">On Return-Key, copy the generated password to the "Primary Selection"</property>
+                <property name="title">Copy to Primary Selection</property>
+                <child>
+                  <object class="GtkSwitch">
+                    <property name="margin-bottom">16</property>
+                    <property name="margin-top">16</property>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
         </child>
       </object>
     </child>
     <child>
-      <object class="GtkGrid" id="right-grid">
-        <property name="can-focus">0</property>
-        <property name="margin-start">10</property>
-        <property name="margin-end">10</property>
-        <property name="margin-top">10</property>
-        <property name="margin-bottom">10</property>
-        <property name="row-spacing">7</property>
+      <object class="AdwPreferencesPage" id="aliases-page">
+        <property name="icon-name">dialog-password-symbolic</property>
+        <property name="title">Aliases</property>
         <child>
-          <object class="GtkBox" id="copy-to-clipboard-box">
+          <object class="GtkGrid" id="left-grid">
             <property name="can-focus">0</property>
-            <property name="hexpand">1</property>
-            <property name="spacing">10</property>
+            <property name="margin-bottom">10</property>
+            <property name="margin-end">10</property>
+            <property name="margin-start">10</property>
+            <property name="margin-top">10</property>
             <child>
-              <object class="GtkLabel" id="copy-to-clipboard-label">
+              <object class="GtkScrolledWindow" id="scrolledwindow1">
+                <property name="has-frame">1</property>
                 <property name="hexpand">1</property>
-                <property name="can-focus">0</property>
-                <property name="label" translatable="yes">Copy to Clipboard</property>
-                <property name="xalign">0</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSwitch" id="copy-to-clipboard-switch"></object>
-            </child>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">3</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox" id="copy-to-primary-box">
-            <property name="can-focus">0</property>
-            <property name="hexpand">1</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel" id="copy-to-primary-label">
-                <property name="hexpand">1</property>
-                <property name="can-focus">0</property>
-                <property name="label" translatable="yes">Copy to Primary Selection</property>
-                <property name="xalign">0</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSwitch" id="copy-to-primary-switch"></object>
-            </child>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">2</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox" id="show-notification-box">
-            <property name="can-focus">0</property>
-            <property name="hexpand">1</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel" id="show-notification-label">
-                <property name="hexpand">1</property>
-                <property name="can-focus">0</property>
-                <property name="label" translatable="yes">Show Copy Notification</property>
-                <property name="xalign">0</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSwitch" id="show-notification-switch"></object>
-            </child>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">1</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="GtkLabel" id="return-action-label">
-            <property name="can-focus">0</property>
-            <property name="label" translatable="yes">Actions on return-key in secret input</property>
-            <property name="xalign">0</property>
-            <attributes>
-              <attribute name="weight" value="bold"></attribute>
-            </attributes>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">0</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="GtkSeparator" id="separator1">
-            <property name="can-focus">0</property>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">4</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="GtkGrid" id="auto-save-aliases-grid">
-            <property name="can-focus">0</property>
-            <property name="row-spacing">5</property>
-            <property name="column-spacing">10</property>
-            <child>
-              <object class="GtkLabel" id="auto-save-aliases-to-file">
-                <property name="can-focus">0</property>
-                <property name="hexpand">1</property>
-                <property name="label" translatable="yes">Auto-Save Aliases to File</property>
-                <property name="xalign">0</property>
-                <layout>
-                  <property name="column">0</property>
-                  <property name="row">0</property>
-                </layout>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSwitch" id="keep-copy-of-aliases-in-file-switch">
-                <layout>
-                  <property name="column">1</property>
-                  <property name="row">0</property>
-                </layout>
-              </object>
-            </child>
-            <child>
-              <object class="GtkButton" id="keep-copy-of-aliases-filename-button">
-                <property name="receives-default">1</property>
+                <property name="vexpand">1</property>
                 <child>
-                  <object class="GtkBox" id="keep-copy-of-aliases-filename-button-box">
-                    <property name="can-focus">0</property>
-                    <property name="spacing">10</property>
-                    <child>
-                      <object class="GtkLabel" id="keep-copy-of-aliases-filename-label">
-                        <property name="hexpand">1</property>
-                        <property name="can-focus">0</property>
-                        <property name="ellipsize">middle</property>
-                        <property name="xalign">0</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImage" id="keep-copy-of-aliases-save-image">
-                        <property name="can-focus">0</property>
-                        <property name="icon-name">document-save</property>
-                      </object>
+                  <object class="GtkTreeView" id="tree-treeview">
+                    <property name="enable-search">0</property>
+                    <property name="headers-visible">0</property>
+                    <property name="show-expanders">0</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection" id="treeview-selection"/>
                     </child>
                   </object>
                 </child>
                 <layout>
                   <property name="column">0</property>
                   <property name="row">1</property>
-                  <property name="column-span">2</property>
                 </layout>
               </object>
             </child>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">5</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox" id="password-length-box">
-            <property name="can-focus">0</property>
-            <property name="spacing">10</property>
             <child>
-              <object class="GtkLabel" id="default-password-length-label">
-                <property name="hexpand">1</property>
+              <object class="GtkBox" id="tree-toolbar">
                 <property name="can-focus">0</property>
-                <property name="label" translatable="yes">Default Password Length</property>
-                <property name="xalign">0</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSpinButton" id="default-password-length-spinbutton">
-                <property name="adjustment">default-password-length-adjustment</property>
-                <property name="numeric">1</property>
-              </object>
-            </child>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">7</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="GtkSeparator" id="separator2">
-            <property name="can-focus">0</property>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">6</property>
-            </layout>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox" id="password-method-box">
-            <property name="can-focus">0</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel" id="password-method-label">
-                <property name="hexpand">1</property>
-                <property name="can-focus">0</property>
-                <property name="label" translatable="yes">Password Method</property>
-                <property name="xalign">0</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkComboBox" id="password-method-combobox">
-                <property name="hexpand">1</property>
-                <property name="model">password-methods</property>
-                <property name="can-focus">0</property>
-                <property name="id-column">0</property>
                 <child>
-                  <object class="GtkCellRendererText"/>
-                  <attributes>
-                    <attribute name="text">0</attribute>
-                  </attributes>
+                  <object class="GtkButton" id="tree-toolbutton-add">
+                    <property name="can-focus">0</property>
+                    <property name="icon-name">list-add-symbolic</property>
+                  </object>
                 </child>
+                <child>
+                  <object class="GtkButton" id="tree-toolbutton-remove">
+                    <property name="can-focus">0</property>
+                    <property name="icon-name">list-remove-symbolic</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="tree-toolbutton-export">
+                    <property name="can-focus">0</property>
+                    <property name="icon-name">document-save-as-symbolic</property>
+                  </object>
+                </child>
+                <style>
+                  <class name="toolbar"/>
+                  <class name="inline-toolbar"/>
+                </style>
+                <layout>
+                  <property name="column">0</property>
+                  <property name="row">2</property>
+                </layout>
               </object>
             </child>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">8</property>
-            </layout>
+            <child>
+              <object class="GtkLabel" id="recent-aliases-label">
+                <property name="can-focus">0</property>
+                <property name="halign">start</property>
+                <property name="label">Aliases known to this extension</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
+                <layout>
+                  <property name="column">0</property>
+                  <property name="row">0</property>
+                </layout>
+              </object>
+            </child>
           </object>
         </child>
       </object>
