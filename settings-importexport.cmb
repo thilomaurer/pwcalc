@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
+<cambalache-project version="0.13.1" target_tk="gtk-4.0">
+  <ui>
+	(1,None,"settings-importexport.gtk4.ui","settings-importexport.gtk4.cmb.ui",None,None,None,None,None,None,None)
+  </ui>
+  <ui_library>
+	(1,"gtk","4.10",None)
+  </ui_library>
+  <object>
+	(1,13,"GtkWindow","dialog",None,None,None,None,-1,None),
+	(1,14,"GtkBox","vbox",13,None,None,None,None,None),
+	(1,15,"GtkLabel","heading",14,None,None,None,None,None),
+	(1,16,"GtkScrolledWindow","scrolledwindow",14,None,None,None,1,None),
+	(1,17,"GtkTextView","textview",16,None,None,None,None,None),
+	(1,18,"GtkTextBuffer","textbuffer",17,None,None,None,None,None),
+	(1,19,"GtkBox",None,14,None,None,None,2,None),
+	(1,20,"GtkButton","import",19,None,None,None,None,None),
+	(1,21,"GtkButton","cancel",19,None,None,None,1,None)
+  </object>
+  <object_property>
+	(1,13,"GtkWindow","child","14",None,None,None,None,None,None,None,None,None),
+	(1,13,"GtkWindow","title","Import/Export Aliases",None,None,None,None,None,None,None,None,None),
+	(1,14,"GtkOrientable","orientation","vertical",None,None,None,None,None,None,None,None,None),
+	(1,14,"GtkWidget","margin-bottom","10",None,None,None,None,None,None,None,None,None),
+	(1,14,"GtkWidget","margin-end","10",None,None,None,None,None,None,None,None,None),
+	(1,14,"GtkWidget","margin-start","10",None,None,None,None,None,None,None,None,None),
+	(1,14,"GtkWidget","margin-top","10",None,None,None,None,None,None,None,None,None),
+	(1,15,"GtkLabel","label","Copy&amp;Paste your JSON-Array of aliases below:","yes",None,None,None,None,None,None,None,None),
+	(1,15,"GtkWidget","halign","start",None,None,None,None,None,None,None,None,None),
+	(1,16,"GtkScrolledWindow","child",None,None,None,None,None,17,None,None,None,None),
+	(1,16,"GtkScrolledWindow","has-frame","True",None,None,None,None,None,None,None,None,None),
+	(1,16,"GtkWidget","focusable","1",None,None,None,None,None,None,None,None,None),
+	(1,16,"GtkWidget","margin-bottom","10",None,None,None,None,None,None,None,None,None),
+	(1,16,"GtkWidget","margin-top","10",None,None,None,None,None,None,None,None,None),
+	(1,16,"GtkWidget","vexpand","True",None,None,None,None,None,None,None,None,None),
+	(1,17,"GtkTextView","buffer",None,None,None,None,None,18,None,None,None,None),
+	(1,17,"GtkTextView","left-margin","4",None,None,None,None,None,None,None,None,None),
+	(1,17,"GtkTextView","right-margin","4",None,None,None,None,None,None,None,None,None),
+	(1,17,"GtkTextView","wrap-mode","word",None,None,None,None,None,None,None,None,None),
+	(1,17,"GtkWidget","focusable","1",None,None,None,None,None,None,None,None,None),
+	(1,19,"GtkBox","homogeneous","True",None,None,None,None,None,None,None,None,None),
+	(1,19,"GtkBox","spacing","100",None,None,None,None,None,None,None,None,None),
+	(1,20,"GtkButton","label","Import",None,None,None,None,None,None,None,None,None),
+	(1,21,"GtkButton","label","Cancel",None,None,None,None,None,None,None,None,None)
+  </object_property>
+  <object_data>
+	(1,15,"GtkLabel",1,1,None,None,None,None,None,None),
+	(1,15,"GtkLabel",2,2,None,1,None,None,None,None)
+  </object_data>
+  <object_data_arg>
+	(1,15,"GtkLabel",2,2,"end",None),
+	(1,15,"GtkLabel",2,2,"name","weight"),
+	(1,15,"GtkLabel",2,2,"start",None),
+	(1,15,"GtkLabel",2,2,"value","bold")
+  </object_data_arg>
+</cambalache-project>

@@ -1,28 +1,18 @@
 const version = "1.1.7";
 
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
-
 import Gdk from 'gi://Gdk';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
-const Gettext = imports.gettext;
-
-import * as ExtensionUtils from 'resource:///org/gnome/shell/misc/extensionUtils.js';
-
-
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
-
-//const Me = ExtensionUtils.getCurrentExtension();
-//const Domain = Gettext.domain(Me.metadata.uuid);
-//const _ = Domain.gettext;
-
 import * as Utils from './utils.js';
+
 
 let pwCalc;
 let uuid;
@@ -48,8 +38,11 @@ export default class pwcalcExtension extends Extension {
         this._settings = this.getSettings();
 		uuid = this.uuid;
 		validate_pw_calculation();
-		pwCalc = new PasswordCalculator(this._settings);
+		pwCalc = new PasswordCalculator(this._settings,this);
 		Main.panel.addToStatusArea('pwCalc', pwCalc);
+		console.log("XXXXXXXXXXXXXXXXXXXXX");
+		console.log(this);
+		//this.openPreferences();
     }
 
     disable() {
@@ -92,17 +85,17 @@ let SuggestionMenuItem = GObject.registerClass({
 
 let PasswordCalculator = GObject.registerClass(
 class PasswordCalculator extends PanelMenu.Button {
-	_init(_settings) {
+	_init(_settings,ext) {
+		console.log("sett",_settings);
+		console.log("ext",ext);
 		super._init(0, 'PasswordCalculator', false);
 		this.settings=_settings;
+		this.ext=ext;
 		this.suggestionsItems=[];
 		this.loadConfig();
 		this.compat_password_method();
 		this.setupUI();
 		this.updateRecentURL();
-	}
-	_onPreferencesActivate() {
-		ExtensionUtils.openPrefs();
 	}
 	setupUI() {
 
@@ -154,7 +147,10 @@ class PasswordCalculator extends PanelMenu.Button {
 		this.menu.addMenuItem(this.urlCombo);
 
 		let item = new PopupMenu.PopupMenuItem(_("Settings"));
-		item.connect('activate', this._onPreferencesActivate);
+		item.connect('activate',  function(sender,open) {
+			self.ext.openPreferences();
+		});
+
 		this.menu.addMenuItem(item);
 
 		this.menu.connect('open-state-changed', function(sender,open) {
