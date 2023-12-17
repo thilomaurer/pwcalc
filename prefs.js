@@ -27,6 +27,7 @@
 
 import Gdk from 'gi://Gdk';
 import Gtk from 'gi://Gtk';
+import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 
 const RECENT_URL_KEY = 'recenturls';
@@ -38,14 +39,197 @@ const KEEP_COPY_OF_ALIASES_FILENAME_KEY = 'keep-copy-of-aliases-filename';
 const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
 const PASSWORD_METHOD_KEY = 'password-method';
 
+//import Gio from 'gi://Gio';
+import Adw from 'gi://Adw';
 
 import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 export default class pwcalcExtensionPreferences extends ExtensionPreferences {
-  getPreferencesWidget() {
+  fillPreferencesWindow(window) {
 
+    // Create a settings object and bind the row to the `show-indicator` key
+    //window._settings = this.getSettings();
+    //window._settings.bind('show-indicator', row, 'active',
+    //    Gio.SettingsBindFlags.DEFAULT);
+/*
+    // Create Preferences Page - Settings
+    const settingsPage = new Adw.PreferencesPage();
+    settingsPage.icon_name = "applications-system";
+    settingsPage.title = "Settings";
+    window.add(settingsPage);
+
+    // Password Generation Group
+    const pwgenGroup = new Adw.PreferencesGroup();
+    pwgenGroup.description = "Settings that define the password generation method";
+    pwgenGroup.title = "Password Generation";
+    pwgenGroup.width_request = 400;
+    settingsPage.add(pwgenGroup);
+
+    // Password Method ComboBox
+    const passwordMethodComboBox = new Adw.ComboRow();
+    passwordMethodComboBox.icon_name = "accessories-calculator";
+    let model = new Gtk.StringList();
+    model.append("SHA1");
+    model.append("HMAC_SHA1");
+    model.append("HMAC_SHA1_INEXACT");
+    passwordMethodComboBox.model = model;
+    passwordMethodComboBox.subtitle = "The algorithm used to calculate the password from alias and secret";
+    passwordMethodComboBox.title = "Password Method";
+    pwgenGroup.add(passwordMethodComboBox);
+
+    // Password Length Row
+    const passwordLengthRow = new Adw.ActionRow();
+    passwordLengthRow.icon_name = "gcr-password";
+    passwordLengthRow.subtitle = "The number of password-characters to generate";
+    passwordLengthRow.title = "Password Length";
+    pwgenGroup.add(passwordLengthRow);
+
+    // Password Length SpinButton
+    const passwordLengthSpinButton = new Gtk.SpinButton();
+    passwordLengthSpinButton.margin_bottom = 12;
+    passwordLengthSpinButton.margin_top = 12;
+    passwordLengthRow.add_suffix(passwordLengthSpinButton);
+
+    // Extension Behavior Group
+    const behaviorGroup = new Adw.PreferencesGroup();
+    behaviorGroup.description = "Settings that define the behavior of this extension";
+    behaviorGroup.title = "Extension Behavior";
+    behaviorGroup.width_request = 400;
+    settingsPage.add(behaviorGroup);
+
+    // Auto-Save Aliases to File Row
+    const autoSaveAliasesRow = new Adw.ActionRow();
+    autoSaveAliasesRow.subtitle = "Keep the list of aliases in the selected file in sync with this Extension";
+    autoSaveAliasesRow.title = "Auto-Save Aliases to File";
+    behaviorGroup.add(autoSaveAliasesRow);
+
+    // Auto-Save Aliases Switch
+    const autoSaveAliasesSwitch = new Gtk.Switch();
+    autoSaveAliasesSwitch.margin_bottom = 20;
+    autoSaveAliasesSwitch.margin_top = 20;
+    autoSaveAliasesRow.add_suffix(autoSaveAliasesSwitch);
+
+    
+    // Button for Auto-Save Aliases Filename
+    const autoSaveAliasesButton = new Gtk.Button();
+    autoSaveAliasesButton.margin_bottom = 16;
+    autoSaveAliasesButton.margin_top = 16;
+    autoSaveAliasesButton.receives_default = true;
+    autoSaveAliasesRow.add_suffix(autoSaveAliasesButton);
+
+    // Box for Auto-Save Aliases Filename Button
+    const autoSaveAliasesBox = new Gtk.Box();
+    autoSaveAliasesBox.can_focus = false;
+    autoSaveAliasesBox.spacing = 10;
+    autoSaveAliasesButton.append(autoSaveAliasesBox);
+
+    // Label for Auto-Save Aliases Filename
+    const autoSaveAliasesLabel = new Gtk.Label();
+    autoSaveAliasesLabel.can_focus = false;
+    autoSaveAliasesLabel.ellipsize = Gtk.EllipsizeMode.MIDDLE;
+    autoSaveAliasesLabel.hexpand = true;
+    autoSaveAliasesLabel.xalign = 0;
+    autoSaveAliasesBox.append(autoSaveAliasesLabel);
+
+    // Image for Auto-Save Aliases Filename Button
+    const autoSaveAliasesImage = new Gtk.Image();
+    autoSaveAliasesImage.can_focus = false;
+    autoSaveAliasesImage.icon_name = "document-save-symbolic";
+    autoSaveAliasesBox.append(autoSaveAliasesImage);
+
+    // Show Copy Notification Row
+    const showCopyNotificationRow = new Adw.ActionRow();
+    showCopyNotificationRow.subtitle = "On Return-Key, notify when the generated password is copied into the 'Clipboard' or 'Primary Selection'";
+    showCopyNotificationRow.title = "Show Copy Notification";
+    behaviorGroup.add(showCopyNotificationRow);
+
+    // Show Copy Notification Switch
+    const showCopyNotificationSwitch = new Gtk.Switch();
+    showCopyNotificationSwitch.margin_bottom = 16;
+    showCopyNotificationSwitch.margin_top = 16;
+    showCopyNotificationRow.add_suffix(showCopyNotificationSwitch);
+
+    // Copy to Clipboard Row
+    const copyToClipboardRow = new Adw.ActionRow();
+    copyToClipboardRow.subtitle = "On Return-Key, copy the generated password to the 'Clipboard'";
+    copyToClipboardRow.title = "Copy to Clipboard";
+    behaviorGroup.add(copyToClipboardRow);
+
+    // Copy to Clipboard Switch
+    const copyToClipboardSwitch = new Gtk.Switch();
+    copyToClipboardSwitch.margin_bottom = 16;
+    copyToClipboardSwitch.margin_top = 16;
+    copyToClipboardRow.add_suffix(copyToClipboardSwitch);
+
+    // Copy to Primary Selection Row
+    const copyToPrimaryRow = new Adw.ActionRow();
+    copyToPrimaryRow.subtitle = "On Return-Key, copy the generated password to the 'Primary Selection'";
+    copyToPrimaryRow.title = "Copy to Primary Selection";
+    behaviorGroup.add(copyToPrimaryRow);
+
+    // Copy to Primary Switch
+    const copyToPrimarySwitch = new Gtk.Switch();
+    copyToPrimarySwitch.margin_bottom = 16;
+    copyToPrimarySwitch.margin_top = 16;
+    copyToPrimaryRow.add_suffix(copyToPrimarySwitch);
+
+    // Create Aliases Page
+    const aliasesPage = new Adw.PreferencesPage();
+    aliasesPage.icon_name = "dialog-password-symbolic";
+    aliasesPage.title = "Aliases";
+    window.add(aliasesPage);
+
+    // Create Grid for Aliases Page
+    const aliasesGrid = new Gtk.Grid();
+    aliasesGrid.margin_bottom = 10;
+    aliasesGrid.margin_end = 10;
+    aliasesGrid.margin_start = 10;
+    aliasesGrid.margin_top = 10;
+    aliasesPage.add(aliasesGrid);
+
+    // Create Scrolled Window for Tree View
+    const scrolledWindow = new Gtk.ScrolledWindow();
+    scrolledWindow.hexpand = true;
+    scrolledWindow.vexpand = true;
+    scrolledWindow.has_frame = true;
+    aliasesGrid.attach(scrolledWindow, 0, 1, 1, 1);
+
+    // Create Tree View
+    const treeTreeView = new Gtk.TreeView();
+    treeTreeView.enable_search = false;
+    treeTreeView.headers_visible = false;
+    treeTreeView.show_expanders = false;
+    scrolledWindow.set_child(treeTreeView);
+
+    // Create List Store for Tree View
+    const listStore = new Gtk.ListStore();
+    treeTreeView.model = listStore;
+
+    // Create Tree Selection for Tree View
+    const treeViewSelection = new Gtk.TreeSelection();
+    treeTreeView.set_enable_tree_lines(true);
+    treeTreeView.set_selection(treeViewSelection);
+
+    // Create Box for Tree Toolbar
+    const treeToolbar = new Gtk.Box();
+    aliasesGrid.attach(treeToolbar, 0, 2, 1, 1);
+
+    // Add Buttons to Tree Toolbar
+    const addButton = new Gtk.Button({ icon_name: "list-add-symbolic" });
+    treeToolbar.append(addButton);
+    const removeButton = new Gtk.Button({ icon_name: "list-remove-symbolic" });
+    treeToolbar.append(removeButton);
+    const exportButton = new Gtk.Button({ icon_name: "document-save-as-symbolic" });
+    treeToolbar.append(exportButton);
+
+    // Create Label for Aliases Section
+    const aliasesLabel = new Gtk.Label();
+    aliasesLabel.label = "Aliases known to this extension";
+    aliasesLabel.halign = Gtk.Align.START;
+    aliasesGrid.attach(aliasesLabel, 0, 0, 1, 1);
+*/
     var self = this;
-    console.log(this);
+    //console.log(this);
 
     window._settings = this.getSettings();
     var settings = window._settings;
@@ -56,14 +240,24 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
     provider.load_from_path(path + '/prefs.css');
     Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
 
+    Adw.init();
     this.Builder = new Gtk.Builder();
     this.Builder.set_scope(new pwcalcBuilderScope());
     this.Builder.add_from_file(path + "/pwcalc-settings.ui");
-    this.MainWidget = this.Builder.get_object("main-widget");
+    this.MainWidget = this.Builder.get_object("prefs-window");
+
+    var page = this.Builder.get_object("settings-page");
+    console.log(page);
+    page.unparent();
+    console.log(page);
+    window.add(page);
+    return;
     this.treeview = this.Builder.get_object("tree-treeview");
     this.liststore = this.Builder.get_object("liststore");
     this.Iter = this.liststore.get_iter_first();
     this.selectedItem = null;
+
+
 
     var updateListStore = function (aliases) {
       if (typeof self.liststore != "undefined") self.liststore.clear();
@@ -220,6 +414,7 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
       self.Builder.get_object("tree-toolbutton-remove").sensitive = sens
     });
 
+    /*
     this.treeview.set_model(this.liststore);
 
     let column = new Gtk.TreeViewColumn()
@@ -232,6 +427,7 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
     });
 
     if (typeof this.liststore != "undefined") this.liststore.clear();
+    */
 
     var getrecentURL = function () {
       var js = getString(RECENT_URL_KEY);
@@ -275,52 +471,57 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
 
 
     this.Builder.get_object("tree-toolbutton-remove").sensitive = false;
-
-    var bool2switch = function (objectkey, settingskey) {
-      var s = self.Builder.get_object(objectkey);
-      s.active = getBool(settingskey);
-      s.connect("notify::active", function () {
-        setBool(settingskey, arguments[0].active);
-      });
-    };
-    bool2switch("show-notification-switch", SHOW_COPY_NOTIFICATION_KEY);
-    bool2switch("copy-to-clipboard-switch", COPY_TO_CLIPBOARD_KEY);
-    bool2switch("copy-to-primary-switch", COPY_TO_PRIMARY_KEY);
-    bool2switch("keep-copy-of-aliases-in-file-switch", KEEP_COPY_OF_ALIASES_IN_FILE_KEY);
-
-    var string2label = function (objectkey, settingskey) {
-      var s = self.Builder.get_object(objectkey);
-      var update = function () {
-        var label = getString(settingskey);
-        if (label == "") label = "(none)";
-        s.label = label;
-        s.tooltip_text = label;
-      }
-      settings.connect("changed::" + settingskey, function (sender, key) {
-        update();
-      });
-      update();
-    };
-    string2label("keep-copy-of-aliases-filename-label", KEEP_COPY_OF_ALIASES_FILENAME_KEY);
-
-    var float2spin = function (objectkey, settingskey) {
-      var s = self.Builder.get_object(objectkey);
-      s.value = getInteger(settingskey);
-      s.connect("notify::value", function () {
-        setInteger(settingskey, arguments[0].value);
-      });
-    };
-    float2spin("default-password-length-adjustment", DEFAULT_PASSWORD_LENGTH_KEY);
-
-    var string2combo = function (objectkey, settingskey) {
-      var s = self.Builder.get_object(objectkey);
-      s.active_id = getString(settingskey);
-      s.connect("notify::active", function () {
-        setString(settingskey, arguments[0].active_id);
-      });
-    };
-    string2combo("password-method-combobox", PASSWORD_METHOD_KEY);
-
+    /*
+        var bool2switch = function (objectkey, settingskey) {
+          var s = self.Builder.get_object(objectkey);
+          s.active = getBool(settingskey);
+          s.connect("notify::active", function () {
+            setBool(settingskey, arguments[0].active);
+          });
+        };
+        bool2switch("show-notification-switch", SHOW_COPY_NOTIFICATION_KEY);
+        bool2switch("copy-to-clipboard-switch", COPY_TO_CLIPBOARD_KEY);
+        bool2switch("copy-to-primary-switch", COPY_TO_PRIMARY_KEY);
+        bool2switch("keep-copy-of-aliases-in-file-switch", KEEP_COPY_OF_ALIASES_IN_FILE_KEY);
+    */
+    window._settings.bind(SHOW_COPY_NOTIFICATION_KEY, this.Builder.get_object("show-notification-switch"), 'active', Gio.SettingsBindFlags.DEFAULT);
+    window._settings.bind(COPY_TO_CLIPBOARD_KEY, this.Builder.get_object("copy-to-clipboard-switch"), 'active', Gio.SettingsBindFlags.DEFAULT);
+    window._settings.bind(COPY_TO_PRIMARY_KEY, this.Builder.get_object("copy-to-primary-switch"), 'active', Gio.SettingsBindFlags.DEFAULT);
+    window._settings.bind(KEEP_COPY_OF_ALIASES_IN_FILE_KEY, this.Builder.get_object("keep-copy-of-aliases-in-file-switch"), 'active', Gio.SettingsBindFlags.DEFAULT);
+    /*
+        var string2label = function (objectkey, settingskey) {
+          var s = self.Builder.get_object(objectkey);
+          var update = function () {
+            var label = getString(settingskey);
+            if (label == "") label = "(none)";
+            s.label = label;
+            s.tooltip_text = label;
+          }
+          settings.connect("changed::" + settingskey, function (sender, key) {
+            update();
+          });
+          update();
+        };
+        string2label("keep-copy-of-aliases-filename-label", KEEP_COPY_OF_ALIASES_FILENAME_KEY);
+    
+        var float2spin = function (objectkey, settingskey) {
+          var s = self.Builder.get_object(objectkey);
+          s.value = getInteger(settingskey);
+          s.connect("notify::value", function () {
+            setInteger(settingskey, arguments[0].value);
+          });
+        };
+        float2spin("default-password-length-adjustment", DEFAULT_PASSWORD_LENGTH_KEY);
+    
+        var string2combo = function (objectkey, settingskey) {
+          var s = self.Builder.get_object(objectkey);
+          s.active_id = getString(settingskey);
+          s.connect("notify::active", function () {
+            setString(settingskey, arguments[0].active_id);
+          });
+        };
+        string2combo("password-method-combobox", PASSWORD_METHOD_KEY);
+    */
     self.Builder.get_object("keep-copy-of-aliases-filename-button").connect("clicked", function () {
       let dialog = new Gtk.FileChooserDialog({
         title: _("Select Filename to Keep Aliases"),
@@ -338,14 +539,14 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
       });
       dialog.show
     });
-
-    settings.connect("changed", function (sender, key) {
-      if (key == RECENT_URL_KEY)
+    /*
+        settings.connect("changed", function (sender, key) {
+          if (key == RECENT_URL_KEY)
+            updateListStore(getrecentURL());
+        });
         updateListStore(getrecentURL());
-    });
-
-    updateListStore(getrecentURL());
-    return this.MainWidget;
+    
+    */
   }
 }
 
