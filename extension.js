@@ -40,9 +40,6 @@ export default class pwcalcExtension extends Extension {
 		validate_pw_calculation();
 		pwCalc = new PasswordCalculator(this._settings,this);
 		Main.panel.addToStatusArea('pwCalc', pwCalc);
-		console.log("XXXXXXXXXXXXXXXXXXXXX");
-		console.log(this);
-		//this.openPreferences();
     }
 
     disable() {
