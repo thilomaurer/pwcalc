@@ -39,16 +39,52 @@ const KEEP_COPY_OF_ALIASES_FILENAME_KEY = 'keep-copy-of-aliases-filename';
 const DEFAULT_PASSWORD_LENGTH_KEY = 'default-password-length';
 const PASSWORD_METHOD_KEY = 'password-method';
 
-//import Gio from 'gi://Gio';
-import Adw from 'gi://Adw';
-
 import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+
+function bind_AdwComboRow(settings, key, comboRow) {
+
+  var stringList = comboRow.get_model();
+
+  // Function to update the comboRow selection based on the GSettings value
+  function updateComboRowFromSettings() {
+    const value = settings.get_string(key);
+    let index = -1;
+    for (let i = 0; i < stringList.get_n_items(); i++) {
+      if (stringList.get_string(i) === value) {
+        index = i;
+        break;
+      }
+    }
+    if (index !== -1) {
+      console.log("set UI to", index);
+      comboRow.set_selected(index);
+    }
+  }
+
+  // Function to update the GSettings value based on the comboRow selection
+  function updateSettingsFromComboRow() {
+    const position = comboRow.get_selected();
+    console.log("set settings to", position);
+    if (position !== -1) {
+      const value = stringList.get_string(position);
+      settings.set_string(key, value);
+    }
+  }
+
+  // Connect the change signal of GSettings
+  settings.connect(`changed::${key}`, updateComboRowFromSettings);
+
+  // Connect the change signal of the comboRow
+  comboRow.connect('notify::selected', updateSettingsFromComboRow);
+
+  // Initial synchronization
+  updateComboRowFromSettings();
+}
 
 export default class pwcalcExtensionPreferences extends ExtensionPreferences {
   fillPreferencesWindow(window) {
 
-      var self = this;
-    //console.log(this);
+    var self = this;
 
     window._settings = this.getSettings();
     var settings = window._settings;
@@ -59,11 +95,9 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
     provider.load_from_path(path + '/prefs.css');
     Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-    //Adw.init();
     this.Builder = new Gtk.Builder();
     this.Builder.set_scope(new pwcalcBuilderScope());
     this.Builder.add_from_file(path + "/pwcalc-settings.ui");
-    //this.MainWidget = this.Builder.get_object("prefs-window");
 
     var spage = this.Builder.get_object("settings-page");
     var apage = this.Builder.get_object("aliases-page");
@@ -76,24 +110,32 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
     settings.bind(COPY_TO_PRIMARY_KEY, this.Builder.get_object("copy-to-primary-switch"), 'active', Gio.SettingsBindFlags.DEFAULT);
     settings.bind(KEEP_COPY_OF_ALIASES_IN_FILE_KEY, this.Builder.get_object("keep-copy-of-aliases-in-file-switch"), 'active', Gio.SettingsBindFlags.DEFAULT);
     settings.bind(DEFAULT_PASSWORD_LENGTH_KEY, this.Builder.get_object("default-password-length-adjustment"), 'value', Gio.SettingsBindFlags.DEFAULT);
-    settings.bind(KEEP_COPY_OF_ALIASES_FILENAME_KEY, this.Builder.get_object("keep-copy-of-aliases-filename-label"), 'value', Gio.SettingsBindFlags.DEFAULT);
-    settings.bind(PASSWORD_METHOD_KEY, this.Builder.get_object("password-method-combobox"), 'selected-item', Gio.SettingsBindFlags.DEFAULT);
+    settings.bind(KEEP_COPY_OF_ALIASES_FILENAME_KEY, this.Builder.get_object("keep-copy-of-aliases-filename-label"), 'label', Gio.SettingsBindFlags.DEFAULT);
+    //settings.bind(PASSWORD_METHOD_KEY, this.Builder.get_object("password-method-combobox"), 'selected-item', Gio.SettingsBindFlags.DEFAULT);
+    bind_AdwComboRow(settings, PASSWORD_METHOD_KEY, this.Builder.get_object("password-method-combobox"));
 
     self.Builder.get_object("keep-copy-of-aliases-filename-button").connect("clicked", function () {
       let dialog = new Gtk.FileChooserDialog({
         title: _("Select Filename to Keep Aliases"),
-        transient_for: window.get_root(),
+        transient_for: window,
         action: Gtk.FileChooserAction.SAVE,
         modal: true
       });
       dialog.add_button("Cancel", Gtk.ResponseType.CANCEL);
       dialog.add_button("Save", Gtk.ResponseType.ACCEPT);
-      dialog.connect('response', function (res) {
-        if (res == Gtk.ResponseType.ACCEPT) {
-          var filename = dialog.get_filename();
-          settings.set_string("keep-copy-of-aliases-filename", filename);
+
+      dialog.connect("response", (dlg, response) => {
+        if (response === Gtk.ResponseType.ACCEPT) {
+          const file = dlg.get_file();
+          if (file) {
+            const filename = file.get_path(); // This gets the file path as a string
+            console.log(filename);
+            settings.set_string(KEEP_COPY_OF_ALIASES_FILENAME_KEY, filename);
+          }
         }
+        dialog.destroy();
       });
+
       dialog.show();
     });
 
@@ -262,16 +304,16 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
 
     /*
     this.treeview.set_model(this.liststore);
-
+ 
     let column = new Gtk.TreeViewColumn()
     this.treeview.append_column(column);
-
+ 
     let renderer = new Gtk.CellRendererText();
     column.pack_start(renderer, null);
     column.set_cell_data_func(renderer, function () {
       arguments[1].markup = arguments[2].get_value(arguments[3], 0);
     });
-
+ 
     if (typeof this.liststore != "undefined") this.liststore.clear();
     */
 
@@ -317,9 +359,9 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
 
 
     this.Builder.get_object("tree-toolbutton-remove").sensitive = false;
-  
+
     self.Builder.get_object("keep-copy-of-aliases-filename-button").connect("clicked", function () {
-      let dialog = new Gtk.FileChooserDialog({
+      let dialog = new Gtk.dialog({
         title: _("Select Filename to Keep Aliases"),
         transient_for: self.MainWidget.get_root(),
         action: Gtk.FileChooserAction.SAVE,

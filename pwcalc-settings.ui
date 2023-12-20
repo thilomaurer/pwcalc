@@ -35,7 +35,16 @@
             <property name="title">Password Length</property>
             <child>
               <object class="GtkSpinButton" id="default-password-length-adjustment">
+                <property name="adjustment">
+                  <object class="GtkAdjustment">
+                    <property name="page-increment">8.0</property>
+                    <property name="step-increment">1.0</property>
+                    <property name="upper">64.0</property>
+                    <property name="value">16.0</property>
+                  </object>
+                </property>
                 <property name="valign">center</property>
+                <property name="value">16.0</property>
               </object>
             </child>
           </object>
@@ -52,34 +61,35 @@
             <property name="subtitle">Keep the list of aliases in the selected file in sync with this Extenstion</property>
             <property name="title">Auto-Save Aliases to File</property>
             <child>
-              <object class="GtkSwitch" id="keep-copy-of-aliases-in-file-switch">
-                <property name="valign">center</property>
-              </object>
-            </child>
-            <child>
               <object class="GtkButton" id="keep-copy-of-aliases-filename-button">
                 <property name="receives-default">1</property>
                 <property name="valign">center</property>
                 <child>
                   <object class="GtkBox">
                     <property name="can-focus">0</property>
-                    <property name="spacing">10</property>
-                    <child>
-                      <object class="GtkLabel" id="keep-copy-of-aliases-filename-label">
-                        <property name="can-focus">0</property>
-                        <property name="ellipsize">middle</property>
-                        <property name="hexpand">1</property>
-                        <property name="xalign">0</property>
-                      </object>
-                    </child>
+                    <property name="spacing">6</property>
                     <child>
                       <object class="GtkImage">
                         <property name="can-focus">0</property>
                         <property name="icon-name">document-save-symbolic</property>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkLabel" id="keep-copy-of-aliases-filename-label">
+                        <property name="can-focus">0</property>
+                        <property name="ellipsize">middle</property>
+                        <property name="hexpand">1</property>
+                        <property name="width-request">100</property>
+                        <property name="xalign">0</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSwitch" id="keep-copy-of-aliases-in-file-switch">
+                <property name="valign">center</property>
               </object>
             </child>
           </object>

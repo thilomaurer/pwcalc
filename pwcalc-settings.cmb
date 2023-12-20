@@ -17,11 +17,11 @@
 	(1,36,"GtkSpinButton","default-password-length-adjustment",35,None,None,None,None,None),
 	(1,37,"AdwPreferencesGroup","behavior-group",31,None,None,None,1,None),
 	(1,38,"AdwActionRow",None,37,None,None,None,None,None),
-	(1,39,"GtkSwitch","keep-copy-of-aliases-in-file-switch",38,None,None,None,None,None),
-	(1,40,"GtkButton","keep-copy-of-aliases-filename-button",38,None,None,None,1,None),
+	(1,39,"GtkSwitch","keep-copy-of-aliases-in-file-switch",38,None,None,None,1,None),
+	(1,40,"GtkButton","keep-copy-of-aliases-filename-button",38,None,None,None,None,None),
 	(1,41,"GtkBox",None,40,None,None,None,None,None),
-	(1,42,"GtkLabel","keep-copy-of-aliases-filename-label",41,None,None,None,None,None),
-	(1,43,"GtkImage",None,41,None,None,None,1,None),
+	(1,42,"GtkLabel","keep-copy-of-aliases-filename-label",41,None,None,None,1,None),
+	(1,43,"GtkImage",None,41,None,None,None,None,None),
 	(1,44,"AdwActionRow",None,37,None,None,None,1,None),
 	(1,45,"GtkSwitch","show-notification-switch",44,None,None,None,None,None),
 	(1,46,"AdwActionRow",None,37,None,None,None,2,None),
@@ -38,7 +38,8 @@
 	(1,57,"GtkButton","tree-toolbutton-add",56,None,None,None,None,None),
 	(1,58,"GtkButton","tree-toolbutton-remove",56,None,None,None,1,None),
 	(1,59,"GtkButton","tree-toolbutton-export",56,None,None,None,2,None),
-	(1,60,"GtkLabel","recent-aliases-label",51,None,None,None,2,None)
+	(1,60,"GtkLabel","recent-aliases-label",51,None,None,None,2,None),
+	(1,61,"GtkAdjustment",None,36,None,None,None,-1,None)
   </object>
   <object_property>
 	(1,31,"AdwPreferencesPage","icon-name","applications-system",None,None,None,None,None,None,None,None,None),
@@ -53,6 +54,8 @@
 	(1,35,"AdwActionRow","icon-name","gcr-password",None,None,None,None,None,None,None,None,None),
 	(1,35,"AdwActionRow","subtitle","The number of password-characters to generate",None,None,None,None,None,None,None,None,None),
 	(1,35,"AdwPreferencesRow","title","Password Length",None,None,None,None,None,None,None,None,None),
+	(1,36,"GtkSpinButton","adjustment",None,None,None,None,None,61,None,None,None,None),
+	(1,36,"GtkSpinButton","value","16.0",None,None,None,None,None,None,None,None,None),
 	(1,36,"GtkWidget","valign","center",None,None,None,None,None,None,None,None,None),
 	(1,37,"AdwPreferencesGroup","description","Setting that define the behavior of this extension",None,None,None,None,None,None,None,None,None),
 	(1,37,"AdwPreferencesGroup","title","Extension Behavior",None,None,None,None,None,None,None,None,None),
@@ -62,12 +65,13 @@
 	(1,39,"GtkWidget","valign","center",None,None,None,None,None,None,None,None,None),
 	(1,40,"GtkWidget","receives-default","1",None,None,None,None,None,None,None,None,None),
 	(1,40,"GtkWidget","valign","center",None,None,None,None,None,None,None,None,None),
-	(1,41,"GtkBox","spacing","10",None,None,None,None,None,None,None,None,None),
+	(1,41,"GtkBox","spacing","6",None,None,None,None,None,None,None,None,None),
 	(1,41,"GtkWidget","can-focus","0",None,None,None,None,None,None,None,None,None),
 	(1,42,"GtkLabel","ellipsize","middle",None,None,None,None,None,None,None,None,None),
 	(1,42,"GtkLabel","xalign","0",None,None,None,None,None,None,None,None,None),
 	(1,42,"GtkWidget","can-focus","0",None,None,None,None,None,None,None,None,None),
 	(1,42,"GtkWidget","hexpand","1",None,None,None,None,None,None,None,None,None),
+	(1,42,"GtkWidget","width-request","100",None,None,None,None,None,None,None,None,None),
 	(1,43,"GtkImage","icon-name","document-save-symbolic",None,None,None,None,None,None,None,None,None),
 	(1,43,"GtkWidget","can-focus","0",None,None,None,None,None,None,None,None,None),
 	(1,44,"AdwActionRow","subtitle","On Return-Key, notify when the generated password as copied into the \"Clipboard\" or \"Primary Selection\"",None,None,None,None,None,None,None,None,None),
@@ -102,7 +106,11 @@
 	(1,59,"GtkWidget","can-focus","0",None,None,None,None,None,None,None,None,None),
 	(1,60,"GtkLabel","label","Aliases known to this extension",None,None,None,None,None,None,None,None,None),
 	(1,60,"GtkWidget","can-focus","0",None,None,None,None,None,None,None,None,None),
-	(1,60,"GtkWidget","halign","start",None,None,None,None,None,None,None,None,None)
+	(1,60,"GtkWidget","halign","start",None,None,None,None,None,None,None,None,None),
+	(1,61,"GtkAdjustment","page-increment","8.0",None,None,None,None,None,None,None,None,None),
+	(1,61,"GtkAdjustment","step-increment","1.0",None,None,None,None,None,None,None,None,None),
+	(1,61,"GtkAdjustment","upper","64.0",None,None,None,None,None,None,None,None,None),
+	(1,61,"GtkAdjustment","value","16.0",None,None,None,None,None,None,None,None,None)
   </object_property>
   <object_layout_property>
 	(1,51,52,"GtkGridLayoutChild","column","0",None,None,None,None),
