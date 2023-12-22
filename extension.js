@@ -83,8 +83,6 @@ let SuggestionMenuItem = GObject.registerClass({
 let PasswordCalculator = GObject.registerClass(
 class PasswordCalculator extends PanelMenu.Button {
 	_init(_settings,ext) {
-		console.log("sett",_settings);
-		console.log("ext",ext);
 		super._init(0, 'PasswordCalculator', false);
 		this.settings=_settings;
 		this.ext=ext;

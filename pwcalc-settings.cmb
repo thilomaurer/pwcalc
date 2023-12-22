@@ -31,15 +31,15 @@
 	(1,50,"AdwPreferencesPage","aliases-page",None,None,None,None,None,None),
 	(1,51,"GtkGrid","left-grid",50,None,None,None,None,None),
 	(1,52,"GtkScrolledWindow","scrolledwindow1",51,None,None,None,None,None),
-	(1,53,"GtkTreeView","tree-treeview",52,None,None,None,None,None),
-	(1,54,"GtkListStore","liststore",53,None,None,None,None,None),
-	(1,55,"GtkTreeSelection","treeview-selection",53,"selection",None,None,None,None),
 	(1,56,"GtkBox","tree-toolbar",51,None,None,None,1,None),
 	(1,57,"GtkButton","tree-toolbutton-add",56,None,None,None,None,None),
 	(1,58,"GtkButton","tree-toolbutton-remove",56,None,None,None,1,None),
 	(1,59,"GtkButton","tree-toolbutton-export",56,None,None,None,2,None),
 	(1,60,"GtkLabel","recent-aliases-label",51,None,None,None,2,None),
-	(1,61,"GtkAdjustment",None,36,None,None,None,-1,None)
+	(1,61,"GtkAdjustment",None,36,None,None,None,-1,None),
+	(1,62,"GtkTreeViewColumn",None,None,None,None,None,-1,None),
+	(1,63,"GtkColumnView","aliases-table",52,None,None,None,-1,None),
+	(1,64,"GtkSingleSelection","aliases-table-selection",63,None,None,None,-1,None)
   </object>
   <object_property>
 	(1,31,"AdwPreferencesPage","icon-name","applications-system",None,None,None,None,None,None,None,None,None),
@@ -93,10 +93,6 @@
 	(1,52,"GtkScrolledWindow","has-frame","1",None,None,None,None,None,None,None,None,None),
 	(1,52,"GtkWidget","hexpand","1",None,None,None,None,None,None,None,None,None),
 	(1,52,"GtkWidget","vexpand","1",None,None,None,None,None,None,None,None,None),
-	(1,53,"GtkTreeView","enable-search","0",None,None,None,None,None,None,None,None,None),
-	(1,53,"GtkTreeView","headers-visible","0",None,None,None,None,None,None,None,None,None),
-	(1,53,"GtkTreeView","model",None,None,None,None,None,54,None,None,None,None),
-	(1,53,"GtkTreeView","show-expanders","0",None,None,None,None,None,None,None,None,None),
 	(1,56,"GtkWidget","can-focus","0",None,None,None,None,None,None,None,None,None),
 	(1,57,"GtkButton","icon-name","list-add-symbolic",None,None,None,None,None,None,None,None,None),
 	(1,57,"GtkWidget","can-focus","0",None,None,None,None,None,None,None,None,None),
@@ -110,7 +106,8 @@
 	(1,61,"GtkAdjustment","page-increment","8.0",None,None,None,None,None,None,None,None,None),
 	(1,61,"GtkAdjustment","step-increment","1.0",None,None,None,None,None,None,None,None,None),
 	(1,61,"GtkAdjustment","upper","64.0",None,None,None,None,None,None,None,None,None),
-	(1,61,"GtkAdjustment","value","16.0",None,None,None,None,None,None,None,None,None)
+	(1,61,"GtkAdjustment","value","16.0",None,None,None,None,None,None,None,None,None),
+	(1,63,"GtkColumnView","model",None,None,None,None,None,64,None,None,None,None)
   </object_property>
   <object_layout_property>
 	(1,51,52,"GtkGridLayoutChild","column","0",None,None,None,None),
@@ -137,6 +134,7 @@
 	(1,60,"GtkLabel",2,2,"end",None),
 	(1,60,"GtkLabel",2,2,"name","weight"),
 	(1,60,"GtkLabel",2,2,"start",None),
-	(1,60,"GtkLabel",2,2,"value","bold")
+	(1,60,"GtkLabel",2,2,"value","bold"),
+	(1,54,"GtkListStore",5,6,"id","0")
   </object_data_arg>
 </cambalache-project>

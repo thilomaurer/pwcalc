@@ -56,7 +56,6 @@ function bind_AdwComboRow(settings, key, comboRow) {
       }
     }
     if (index !== -1) {
-      console.log("set UI to", index);
       comboRow.set_selected(index);
     }
   }
@@ -64,7 +63,6 @@ function bind_AdwComboRow(settings, key, comboRow) {
   // Function to update the GSettings value based on the comboRow selection
   function updateSettingsFromComboRow() {
     const position = comboRow.get_selected();
-    console.log("set settings to", position);
     if (position !== -1) {
       const value = stringList.get_string(position);
       settings.set_string(key, value);
@@ -114,6 +112,7 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
     //settings.bind(PASSWORD_METHOD_KEY, this.Builder.get_object("password-method-combobox"), 'selected-item', Gio.SettingsBindFlags.DEFAULT);
     bind_AdwComboRow(settings, PASSWORD_METHOD_KEY, this.Builder.get_object("password-method-combobox"));
 
+    // Filename for keeping aliases (in addition to gsettings)
     self.Builder.get_object("keep-copy-of-aliases-filename-button").connect("clicked", function () {
       let dialog = new Gtk.FileChooserDialog({
         title: _("Select Filename to Keep Aliases"),
@@ -129,7 +128,6 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
           const file = dlg.get_file();
           if (file) {
             const filename = file.get_path(); // This gets the file path as a string
-            console.log(filename);
             settings.set_string(KEEP_COPY_OF_ALIASES_FILENAME_KEY, filename);
           }
         }
@@ -139,7 +137,132 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
       dialog.show();
     });
 
+    // Aliases Column View
+    //const model = this.Builder.get_object("aliases-model"); //GListStore
+    const selection = this.Builder.get_object("aliases-table-selection");
+    const columnView = this.Builder.get_object("aliases-table");
+
+    const FooRow = GObject.registerClass({
+      Properties: {
+        'alias': GObject.ParamSpec.string(
+          'alias',
+          'Alias',
+          'Alias of the entry',
+          GObject.ParamFlags.READWRITE,
+          ''
+        ),
+        'width': GObject.ParamSpec.string(
+          'width',
+          'Width',
+          'Width of the entry',
+          GObject.ParamFlags.READWRITE,
+          ''
+        ),
+        'creation-date': GObject.ParamSpec.string(
+          'creation-date',
+          'CreationDate',
+          'Creation Date of the entry',
+          GObject.ParamFlags.READWRITE,
+          ''
+        )
+      }
+    }, class FooRow extends GObject.Object {
+      _init(props = {}) {
+        super._init(props);
+      }
+    });
+
+    const model = new Gio.ListStore({ item_type: FooRow.$gtype });
+    selection.model = model;
+
+    console.log(model);
+    console.log(model.item_type);
+
+    const entry = new FooRow({ alias: "0", width: "1", "creation-date": "2" });
+    console.log(entry);
+
+    var updateModel = function () {
+      var data = JSON.parse(settings.get_string(RECENT_URL_KEY));
+      data.forEach(row => {
+        console.log(row);
+        console.log(typeof row);
+        if (typeof row === "string") {
+          const entry = new FooRow({ alias: row, width: "default", "creation-date": "" });
+          model.append(entry);
+        }
+        if (typeof row === "array") {
+          const entry = new FooRow({ alias: row[0], width: row[1], "creation-date": row[2] });
+          model.append(entry);
+        }
+      });
+    }
+
+    updateModel();
+    //console.log(model);
+    //console.log(JSON.stringify(model));
+
+    // Alias Column
+    const aliasFactory = new Gtk.SignalListItemFactory();
+    aliasFactory.connect("setup", (factory, listItem) => {
+      listItem.set_child(new Gtk.Label({ xalign: 0 }));
+    });
+    aliasFactory.connect("bind", (factory, listItem) => {
+      const item = model.get_item(listItem.get_position());
+      listItem.get_child().set_label(item.alias);
+    });
+    const aliasColumn = new Gtk.ColumnViewColumn({
+      title: "Alias",
+      factory: aliasFactory,
+      expand: true
+    });
+    columnView.append_column(aliasColumn);
+
+    // Width Column
+    const widthFactory = new Gtk.SignalListItemFactory();
+    widthFactory.connect("setup", (factory, listItem) => {
+      listItem.set_child(new Gtk.Label({ xalign: 0 }));
+    });
+    widthFactory.connect("bind", (factory, listItem) => {
+      const item = model.get_item(listItem.get_position());
+      listItem.get_child().set_label(item.width);
+    });
+    const widthColumn = new Gtk.ColumnViewColumn({
+      title: "Width",
+      factory: widthFactory
+    });
+    columnView.append_column(widthColumn);
+
+    // CreationDate Column
+    const creationdateFactory = new Gtk.SignalListItemFactory();
+    creationdateFactory.connect("setup", (factory, listItem) => {
+      listItem.set_child(new Gtk.Label({ xalign: 0 }));
+    });
+    creationdateFactory.connect("bind", (factory, listItem) => {
+      const item = model.get_item(listItem.get_position());
+      listItem.get_child().set_label(item["creation-date"]);
+    });
+    const creationdateColumn = new Gtk.ColumnViewColumn({
+      title: "CreationDate",
+      factory: creationdateFactory
+    });
+    columnView.append_column(creationdateColumn);
+
+    model.connect('items-changed', () => {
+      const data = [];
+      for (let i = 0; i < model.get_n_items(); i++) {
+        let item = model.get_item(i);
+        data.push({
+          alias: item.alias,
+          width: item.width,
+          creationDate: item["creation-date"]
+        });
+      }
+      settings.set_string(MODEL_KEY, JSON.stringify(data));
+    });
+
+
     return;
+
     this.treeview = this.Builder.get_object("tree-treeview");
     this.liststore = this.Builder.get_object("liststore");
     this.Iter = this.liststore.get_iter_first();
@@ -148,11 +271,11 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
 
 
     var updateListStore = function (aliases) {
-      if (typeof self.liststore != "undefined") self.liststore.clear();
-      let current = self.liststore.get_iter_first();
+      if (typeof model != "undefined") model.clear();
+      let current = model.get_iter_first();
       for (let i in aliases) {
-        current = self.liststore.append();
-        self.liststore.set_value(current, 0, aliases[i]);
+        current = model.append();
+        model.set_value(current, 0, aliases[i]);
       }
     }
 
@@ -304,16 +427,16 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
 
     /*
     this.treeview.set_model(this.liststore);
- 
+     
     let column = new Gtk.TreeViewColumn()
     this.treeview.append_column(column);
- 
+     
     let renderer = new Gtk.CellRendererText();
     column.pack_start(renderer, null);
     column.set_cell_data_func(renderer, function () {
       arguments[1].markup = arguments[2].get_value(arguments[3], 0);
     });
- 
+     
     if (typeof this.liststore != "undefined") this.liststore.clear();
     */
 
