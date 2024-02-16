@@ -57,4 +57,4 @@ Utf8.decode = function(strUtf) {
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-//module.exports = {Sha1,Utf8};
+export { Utf8 };
