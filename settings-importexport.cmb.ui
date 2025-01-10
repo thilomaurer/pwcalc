@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.16.0 -->
+<interface>
+  <!-- interface-name settings-importexport.gtk4.ui -->
+  <requires lib="gtk" version="4.10"/>
+  <object class="GtkWindow" id="dialog">
+    <property name="child">vbox</property>
+    <property name="title">Import/Export Aliases</property>
+    <child>
+      <object class="GtkBox" id="vbox">
+        <property name="margin-bottom">10</property>
+        <property name="margin-end">10</property>
+        <property name="margin-start">10</property>
+        <property name="margin-top">10</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="heading">
+            <property name="halign">start</property>
+            <property name="label" translatable="yes">Copy&amp;Paste your JSON-Array of aliases below:</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow" id="scrolledwindow">
+            <property name="child">
+              <object class="GtkTextView" id="textview">
+                <property name="buffer">
+                  <object class="GtkTextBuffer" id="textbuffer"/>
+                </property>
+                <property name="focusable">1</property>
+                <property name="left-margin">4</property>
+                <property name="right-margin">4</property>
+                <property name="wrap-mode">word</property>
+              </object>
+            </property>
+            <property name="focusable">1</property>
+            <property name="has-frame">True</property>
+            <property name="margin-bottom">10</property>
+            <property name="margin-top">10</property>
+            <property name="vexpand">True</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="homogeneous">True</property>
+            <property name="spacing">100</property>
+            <child>
+              <object class="GtkButton" id="import">
+                <property name="label">Import</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="cancel">
+                <property name="label">Cancel</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
