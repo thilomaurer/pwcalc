@@ -57,7 +57,7 @@ let RecentAliasMenuItem = GObject.registerClass({
 	_init(text, params) {
 		super._init(params);
 		this.label = new St.Label({ text: text });
-		this.add(this.label);
+		this.add_child(this.label);
 	}
 	activate(event) {
 		this._parent.close(true);
@@ -73,7 +73,7 @@ let SuggestionMenuItem = GObject.registerClass({
 	_init(text, params) {
 		super._init(params);
 		this.label = new St.Label({ text: text });
-		this.add(this.label);
+		this.add_child(this.label);
 	}
 	activate(event) {
 		this.emit('select');
@@ -130,12 +130,12 @@ class PasswordCalculator extends PanelMenu.Button {
 			self.gen.apply(self,[o,e]);
 		});
 		this.pwdText = new St.Label({style_class: "pwd", can_focus:false});
-		topSection.actor.add_actor(this.headingLabel);
-		topSection.actor.add_actor(this.urlText);
-		bottomSection.actor.add_actor(this.secretText);
-		bottomSection.actor.add_actor(this.pwdText);
-		topSection.actor.add_style_class_name("pwCalc");
-		bottomSection.actor.add_style_class_name("pwCalc");
+		topSection.box.add_child(this.headingLabel);
+		topSection.box.add_child(this.urlText);
+		bottomSection.box.add_child(this.secretText);
+		bottomSection.box.add_child(this.pwdText);
+		topSection.box.add_style_class_name("pwCalc");
+		bottomSection.box.add_style_class_name("pwCalc");
 		this.menu.addMenuItem(topSection);
 		this.menu.addMenuItem(bottomSection);
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());    
@@ -199,9 +199,9 @@ class PasswordCalculator extends PanelMenu.Button {
 			let pwd = calc(sec, url, len);
 			this.pwdText.set_text(this.obfuscate(pwd));
 			if (e && e.get_key_symbol() == Gdk.KEY_Return) {
-				this.copyAndSendNotification(pwd);
+				this.copyAndSendNotification(pwd, url);
 				this.addRecentURL(url);
-				this.menu.actor.hide();
+				this.menu.hide();
 			}
 		} else {
 			this.pwdText.set_text(_("your password"));
@@ -224,15 +224,15 @@ class PasswordCalculator extends PanelMenu.Button {
 			this.recentURL=a;
 		}
 	}
-	copyAndSendNotification(pwd) {
+	copyAndSendNotification(pwd, url) {
 		let clipboard = St.Clipboard.get_default();
 		if (this.CopyToClipboard) {
 			clipboard.set_text(CLIPBOARD_TYPE,pwd);
-			if (this.ShowCopyNotification) showMessage(_("Password copied to clipboard."));
+			if (this.ShowCopyNotification) showMessage(_("Password copied to clipboard."), url);
 		}
 		if (this.CopyToPrimarySelection) {
 			clipboard.set_text(PRIMARY_TYPE,pwd);
-			if (this.ShowCopyNotification) showMessage(_("Password copied to primary selection."));
+			if (this.ShowCopyNotification) showMessage(_("Password copied to primary selection."), url);
 		}
 	}
 	clear() {
@@ -242,7 +242,7 @@ class PasswordCalculator extends PanelMenu.Button {
 		this.updateSuggestions();
 	}
 	updateSuggestions(list) {
-		this.suggestionsItems.forEach(i=>this.menu.box.remove_child(i.actor));
+		this.suggestionsItems.forEach(i=>this.menu.box.remove_child(i));
 		this.suggestionsItems=[];
 		if (list!=null) {
 			list = removeDuplicates(list);
@@ -250,7 +250,7 @@ class PasswordCalculator extends PanelMenu.Button {
 			if (N>8) N=8;
 			for (let i=0;i<N;i++) {
 				let item = new SuggestionMenuItem(list[i]);
-				item.actor.add_style_class_name("pwCalcSuggestion");
+				item.add_style_class_name("pwCalcSuggestion");
 				this.menu.addMenuItem(item,i+1);
 				item.connect('select', () => { this.urlSelected(list[i]); });
 				this.suggestionsItems.push(item);
@@ -363,12 +363,19 @@ function removeDuplicates(a) {
 	return c;
 }
 
-function showMessage(text) { 
-	let source = new MessageTray.SystemNotificationSource();
+function showMessage(text, url) { 
+	let source = new MessageTray.Source({
+		title: _('Password Calculator'),
+		iconName: 'dialog-password-symbolic',
+	});
 	Main.messageTray.add(source);
-	let notification = new MessageTray.Notification(source, "Password Calculator", text, {gicon: new Gio.ThemedIcon({name: 'dialog-password-symbolic'})});
-	notification.setTransient(true);
-	source.showNotification(notification);
+
+	let notification = new MessageTray.Notification({
+		source: source,
+		title: 'Password for '+url,
+		body: text,
+	});
+	source.addNotification(notification);
 }
 
 function hex2bytearray(hex) {
