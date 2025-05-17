@@ -1,7 +1,5 @@
 const version = "1.1.7";
-
-import Gdk from 'gi://Gdk';
-import Gio from 'gi://Gio';
+import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
@@ -179,7 +177,7 @@ class PasswordCalculator extends PanelMenu.Button {
 	urlChanged(o,e) {
 		var urls;
 		this.gen(o);
-		if (e.get_key_symbol() == Gdk.KEY_Return)
+		if (e.get_key_symbol() == Clutter.KEY_Return)
 			this.secretText.clutter_text.grab_key_focus();
 		else {
 			let url = this.urlText.get_text();
@@ -198,7 +196,7 @@ class PasswordCalculator extends PanelMenu.Button {
 			if (calc === undefined) return;
 			let pwd = calc(sec, url, len);
 			this.pwdText.set_text(this.obfuscate(pwd));
-			if (e && e.get_key_symbol() == Gdk.KEY_Return) {
+			if (e && e.get_key_symbol() == Clutter.KEY_Return) {
 				this.copyAndSendNotification(pwd, url);
 				this.addRecentURL(url);
 				this.menu.hide();

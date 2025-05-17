@@ -3,7 +3,7 @@
  *  Password Calculator extension for GNOME Shell preferences
  *  - Creates a widget to set the preferences of the pwcalc extension
  *
- * Copyright (C) 2014-2023
+ * Copyright (C) 2014-2025
  *     Thilo Maurer <tm@thilomaurer.de>
  *
  * This file is part of gnome-shell-extension-pwcalc.
