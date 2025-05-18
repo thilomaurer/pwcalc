@@ -8,7 +8,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
-import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Utils from './utils.js';
 
 
@@ -29,28 +29,28 @@ const LAST_VERSION_KEY = 'last-version';
 
 export default class pwcalcExtension extends Extension {
 
-		//Consider this method deprecated. Only specify gettext-domain in metadata.json. GNOME Shell can automatically initiate the translation for you when it sees the gettext-domain key in metadata.json.
-		//ExtensionUtils.initTranslations(this.uuid);
+	//Consider this method deprecated. Only specify gettext-domain in metadata.json. GNOME Shell can automatically initiate the translation for you when it sees the gettext-domain key in metadata.json.
+	//ExtensionUtils.initTranslations(this.uuid);
 
-    enable() {
-        this._settings = this.getSettings();
+	enable() {
+		this._settings = this.getSettings();
 		uuid = this.uuid;
 		validate_pw_calculation();
-		pwCalc = new PasswordCalculator(this._settings,this);
+		pwCalc = new PasswordCalculator(this._settings, this);
 		Main.panel.addToStatusArea('pwCalc', pwCalc);
-    }
+	}
 
-    disable() {
+	disable() {
 		pwCalc.destroy();
 		pwCalc = null;
-        this._settings = null;
-    }
+		this._settings = null;
+	}
 }
 
 let RecentAliasMenuItem = GObject.registerClass({
 	Signals: {
-        'select': {}
-    }
+		'select': {}
+	}
 }, class RecentAliasMenuItem extends PopupMenu.PopupBaseMenuItem {
 	_init(text, params) {
 		super._init(params);
@@ -65,8 +65,8 @@ let RecentAliasMenuItem = GObject.registerClass({
 
 let SuggestionMenuItem = GObject.registerClass({
 	Signals: {
-        'select': {}
-    }
+		'select': {}
+	}
 }, class SuggestionMenuItem extends PopupMenu.PopupBaseMenuItem {
 	_init(text, params) {
 		super._init(params);
@@ -79,277 +79,306 @@ let SuggestionMenuItem = GObject.registerClass({
 });
 
 let PasswordCalculator = GObject.registerClass(
-class PasswordCalculator extends PanelMenu.Button {
-	_init(_settings,ext) {
-		super._init(0, 'PasswordCalculator', false);
-		this.settings=_settings;
-		this.ext=ext;
-		this.suggestionsItems=[];
-		this.loadConfig();
-		this.compat_password_method();
-		this.setupUI();
-		this.updateRecentURL();
-	}
-	setupUI() {
-
-		this.iconActor = new St.Icon({ icon_name: 'dialog-password-symbolic', style_class: 'system-status-icon' });
-		this.add_child(this.iconActor);
-
-		let topSection = new PopupMenu.PopupMenuSection();
-		let bottomSection = new PopupMenu.PopupMenuSection();
-		this.headingLabel = new St.Label({ text:_("Password Calculator"), style_class: "heading", can_focus:false });
-
-		this.urlCombo = new PopupMenu.PopupSubMenuMenuItem("");
-
-		this.urlText = new St.Entry({
-			name: "searchEntry",
-			hint_text: _("alias"),
-			track_hover: true,
-			can_focus: true,
-			style_class: "search-entry first"
-		});
-
-		let self=this;
-		this.urlText.clutter_text.connect('key-release-event', function(o,e) {
-			self.urlChanged.apply(self,[o,e]);
-		});
-
-		this.secretText = new St.Entry({
-			name: "searchEntry",
-			hint_text: _("secret"),
-			track_hover: true,
-			can_focus: true,
-			style_class: "search-entry last"
-		}); 
-		this.secretText.clutter_text.connect('text-changed', function(o,e) {
-			self.secretChanged.apply(self,[o,e]);
-		});
-		this.secretText.clutter_text.connect('key-release-event', function(o,e) {
-			self.gen.apply(self,[o,e]);
-		});
-		this.pwdText = new St.Label({style_class: "pwd", can_focus:false});
-		topSection.box.add_child(this.headingLabel);
-		topSection.box.add_child(this.urlText);
-		bottomSection.box.add_child(this.secretText);
-		bottomSection.box.add_child(this.pwdText);
-		topSection.box.add_style_class_name("pwCalc");
-		bottomSection.box.add_style_class_name("pwCalc");
-		this.menu.addMenuItem(topSection);
-		this.menu.addMenuItem(bottomSection);
-		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());    
-		this.menu.addMenuItem(this.urlCombo);
-
-		let item = new PopupMenu.PopupMenuItem(_("Settings"));
-		item.connect('activate',  function(sender,open) {
-			self.ext.openPreferences();
-		});
-
-		this.menu.addMenuItem(item);
-
-		this.menu.connect('open-state-changed', function(sender,open) {
-			self.clear();
-			if (!open) self.urlText.clutter_text.grab_key_focus();
-		});
-	}
-	secretChanged(o,e) {
-		let st = this.secretText;
-		let sec = st.get_text();
-		let pwc='';
-		if (sec!="") pwc='\u25cf'; // ● U+25CF BLACK CIRCLE
-		st.clutter_text.set_password_char(pwc);
-	}
-	compat_password_method() {
-		let type = this.PasswordMethod;
-		let keys = this.recentURL;
-		if (this.LastVersion == "undefined" && type == "HMAC_SHA1") {
-			this.PasswordMethod = "HMAC_SHA1_INEXACT";
-			console.info(uuid + ": Setting password-method to HMC-SHA1_INEXACT, since it is the method used before.");
-		} else if (type == "__compat__") {
-			if (keys.length>0) {
-				this.PasswordMethod = "SHA1";
-				console.info(uuid + ": Initializing password-method to SHA1 due to preexisting aliases");
-			} else {
-				this.PasswordMethod = "HMAC_SHA1";
-			}
-		}
-		this.LastVersion = version;
-	}
-	urlChanged(o,e) {
-		var urls;
-		this.gen(o);
-		if (e.get_key_symbol() == Clutter.KEY_Return)
-			this.secretText.clutter_text.grab_key_focus();
-		else {
-			let url = this.urlText.get_text();
-			if (url.length>0)
-				urls = this.recentURL.filter(u => u.toLowerCase().indexOf(url.toLowerCase())!=-1);
-		}
-		this.updateSuggestions(urls);
-	}
-	gen(o,e) {
-		let url = this.urlText.get_text();
-		let sec = this.secretText.get_text();
-		if ((url!="")&&(sec!="")) {
-			let len = this.DefaultPasswordLength;
-			let type = this.PasswordMethod;
-			let calc = calculatePassword[type];
-			if (calc === undefined) return;
-			let pwd = calc(sec, url, len);
-			this.pwdText.set_text(this.obfuscate(pwd));
-			if (e && e.get_key_symbol() == Clutter.KEY_Return) {
-				this.copyAndSendNotification(pwd, url);
-				this.addRecentURL(url);
-				this.menu.hide();
-			}
-		} else {
-			this.pwdText.set_text(_("your password"));
-		}
-	}
-	obfuscate(text) {
-		let len = text.length;
-		let showcount;
-		if (len<=8) showcount=1;
-		else if (len<=12) showcount=2;
-		else if (len<=16) showcount=3;
-		else showcount=4;
-		return text.substring(0,showcount)+Array(len+1-2*showcount).join("\u00B7")+text.substring(len-showcount);
-	}
-	addRecentURL(url) {
-		var a=this.recentURL;
-		if (a.indexOf(url)<0) {
-			a.push(url);
-			a.sort();
-			this.recentURL=a;
-		}
-	}
-	copyAndSendNotification(pwd, url) {
-		let clipboard = St.Clipboard.get_default();
-		if (this.CopyToClipboard) {
-			clipboard.set_text(CLIPBOARD_TYPE,pwd);
-			if (this.ShowCopyNotification) showMessage(_("Password copied to clipboard."), url);
-		}
-		if (this.CopyToPrimarySelection) {
-			clipboard.set_text(PRIMARY_TYPE,pwd);
-			if (this.ShowCopyNotification) showMessage(_("Password copied to primary selection."), url);
-		}
-	}
-	clear() {
-		this.urlText.set_text("");
-		this.secretText.set_text("");
-		this.pwdText.set_text(_("your password"));
-		this.updateSuggestions();
-	}
-	updateSuggestions(list) {
-		this.suggestionsItems.forEach(i=>this.menu.box.remove_child(i));
-		this.suggestionsItems=[];
-		if (list!=null) {
-			list = removeDuplicates(list);
-			let N=list.length;
-			if (N>8) N=8;
-			for (let i=0;i<N;i++) {
-				let item = new SuggestionMenuItem(list[i]);
-				item.add_style_class_name("pwCalcSuggestion");
-				this.menu.addMenuItem(item,i+1);
-				item.connect('select', () => { this.urlSelected(list[i]); });
-				this.suggestionsItems.push(item);
-			}
-		}
-	}
-	updateRecentURL() {
-		let list = this.recentURL;
-		list = removeDuplicates(list);
-		this.urlCombo.menu.removeAll();
-		for (let i=0;i<list.length;i++) {
-			let item = new RecentAliasMenuItem(list[i]);
-			this.urlCombo.menu.addMenuItem(item, i);
-			item.connect('select', () => { this.urlSelected(list[i]); });
-		}
-		let labeltext;
-		if (list.length==0) labeltext=_("No Recent Aliases");
-		else labeltext=_("Recent Aliases");
-		this.urlCombo.label.set_text(labeltext);
-	}
-	urlSelected(URL) {
-		this.updateSuggestions();
-		this.urlText.set_text(URL);
-		this.secretText.clutter_text.grab_key_focus();
-	}
-	loadConfig() {
-		let self = this;
-		this._settingsC = this.settings.connect("changed::"+RECENT_URL_KEY,function(a,key) {
-			if (self.KeepCopyOfAliasesInFile) {
-				let fn=self.KeepCopyOfAliasesFilename;
-				let json=JSON.stringify(self.recentURL,null,"\t");
-				let success=GLib.file_set_contents(fn,json+"\n");
-				if (success==false) console.error(uuid + ": Unable to write to file "+fn);
-			}
-		});
-	}
-	get recentURL() {
-		var js=this.getString(RECENT_URL_KEY);
-		var obj;
-		try {
-			obj=JSON.parse(js);
-		} catch(e) {
-			obj=[];
-		}
-		return obj;
-	}
-	set recentURL(v)
-	{
-		var json=JSON.stringify(v);
-		if (json!==this.getString(RECENT_URL_KEY)) {
-			this.settings.set_string(RECENT_URL_KEY,json);
+	class PasswordCalculator extends PanelMenu.Button {
+		_init(_settings, ext) {
+			super._init(0, 'PasswordCalculator', false);
+			this.settings = _settings;
+			this.ext = ext;
+			this.suggestionsItems = [];
+			this.loadConfig();
+			this.compat_password_method();
+			this.setupUI();
 			this.updateRecentURL();
 		}
-	}
-	getBool(key)
-	{
-		return this.settings.get_boolean(key);
-	}
-	getInteger(key)
-	{
-		return this.settings.get_int(key);
-	}
-	getString(key)
-	{
-		return this.settings.get_string(key);
-	}
-	setString(key,value)
-	{
-		return this.settings.set_string(key,value);
-	}
-	get ShowCopyNotification() {
-		return this.getBool(SHOW_COPY_NOTIFICATION_KEY);
-	}
-	get CopyToClipboard() {
-		return this.getBool(COPY_TO_CLIPBOARD_KEY);
-	}
-	get CopyToPrimarySelection() {
-		return this.getBool(COPY_TO_PRIMARY_KEY);
-	}
-	get DefaultPasswordLength() {
-		return this.getInteger(DEFAULT_PASSWORD_LENGTH_KEY);
-	}
-	get LastVersion() {
-		return this.getString(LAST_VERSION_KEY);
-	}
-	set LastVersion(v) {
-		return this.setString(LAST_VERSION_KEY,v);
-	}
-	get PasswordMethod() {
-		return this.getString(PASSWORD_METHOD_KEY);
-	}
-	set PasswordMethod(v) {
-		return this.setString(PASSWORD_METHOD_KEY,v);
-	}
-	get KeepCopyOfAliasesInFile() {
-		return this.getBool(KEEP_COPY_OF_ALIASES_IN_FILE_KEY);
-	}
-	get KeepCopyOfAliasesFilename() {
-		return this.getString(KEEP_COPY_OF_ALIASES_FILENAME_KEY);
-	}
-});
+		setupUI() {
+
+			this.iconActor = new St.Icon({ icon_name: 'dialog-password-symbolic', style_class: 'system-status-icon' });
+			this.add_child(this.iconActor);
+
+			let topSection = new PopupMenu.PopupMenuSection();
+			let bottomSection = new PopupMenu.PopupMenuSection();
+			this.headingLabel = new St.Label({ text: _("Password Calculator"), style_class: "heading", can_focus: false });
+
+			this.urlCombo = new PopupMenu.PopupSubMenuMenuItem("");
+
+			this.urlText = new St.Entry({
+				name: "searchEntry",
+				hint_text: _("alias"),
+				track_hover: true,
+				can_focus: true,
+				style_class: "search-entry first"
+			});
+
+			let self = this;
+			this.urlText.clutter_text.connect('key-release-event', function (o, e) {
+				self.urlChanged.apply(self, [o, e]);
+			});
+
+			this.secretText = new St.Entry({
+				name: "searchEntry",
+				hint_text: _("secret"),
+				track_hover: true,
+				can_focus: true,
+				style_class: "search-entry last"
+			});
+
+			this.secretText.clutter_text.connect('text-changed', function (o, e) {
+				self.secretChanged.apply(self, [o, e]);
+			});
+
+			this.secretText.clutter_text.connect('key-press-event', function (o, e) {
+				if (e.get_key_symbol() === Clutter.KEY_Return) {
+					self.generatePassword(o, e);
+					return Clutter.EVENT_STOP;
+				}
+				return Clutter.EVENT_PROPAGATE;
+			});
+
+			this.pwdText = new St.Label({ style_class: "pwd", can_focus: false });
+			topSection.box.add_child(this.headingLabel);
+			topSection.box.add_child(this.urlText);
+			bottomSection.box.add_child(this.secretText);
+			bottomSection.box.add_child(this.pwdText);
+			topSection.box.add_style_class_name("pwCalc");
+			bottomSection.box.add_style_class_name("pwCalc");
+			this.menu.addMenuItem(topSection);
+			this.menu.addMenuItem(bottomSection);
+			this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+			this.menu.addMenuItem(this.urlCombo);
+
+			let item = new PopupMenu.PopupMenuItem(_("Settings"));
+			item.connect('activate', function (sender, open) {
+				self.ext.openPreferences();
+			});
+
+			this.menu.addMenuItem(item);
+
+			this.menu.connect('open-state-changed', function (sender, open) {
+				self.clear();
+				if (!open) self.urlText.clutter_text.grab_key_focus();
+			});
+		}
+		secretChanged(o, e) {
+			let st = this.secretText;
+			let sec = st.get_text();
+			let pwc = '';
+			if (sec != "") pwc = '\u25cf'; // ● U+25CF BLACK CIRCLE
+			st.clutter_text.set_password_char(pwc);
+		}
+
+		compat_password_method() {
+			let type = this.PasswordMethod;
+			let keys = this.recentURL;
+			if (this.LastVersion == "undefined" && type == "HMAC_SHA1") {
+				this.PasswordMethod = "HMAC_SHA1_INEXACT";
+				console.info(uuid + ": Setting password-method to HMC-SHA1_INEXACT, since it is the previously used method.");
+			} else if (type == "__compat__") {
+				if (keys.length > 0) {
+					this.PasswordMethod = "SHA1";
+					console.info(uuid + ": Initializing password-method to SHA1 due to preexisting aliases");
+				} else {
+					this.PasswordMethod = "HMAC_SHA1";
+				}
+			}
+			this.LastVersion = version;
+		}
+
+		urlChanged(o, e) {
+			const typed = this.urlText.get_text();
+			let urls = this.recentURL
+				.filter(entry => Array.isArray(entry) && typeof entry[0] === 'string')
+				.map(entry => entry[0])
+				.filter(alias => alias.toLowerCase().includes(typed.toLowerCase()));
+
+			this.updateSuggestions(urls);
+
+			// Return key: move focus only
+			if (e.get_key_symbol() === Clutter.KEY_Return) {
+				this.secretText.clutter_text.grab_key_focus();
+
+				// Clear autocomplete suggestions
+				this.updateSuggestions();
+				return Clutter.EVENT_STOP;
+			}
+
+			return Clutter.EVENT_PROPAGATE;
+		}
+
+		onPasswordConfirmed(url, pwd) {
+			this.copyAndSendNotification(pwd, url);
+			this.addRecentURL(url);
+			global.stage.set_key_focus(null);
+			GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+				this.menu.close();
+				return GLib.SOURCE_REMOVE;
+			});
+		}
+
+		generatePassword() {
+			let url = this.urlText.get_text().trim();
+			let sec = this.secretText.get_text().trim();
+			if (url && sec) {
+				let entry = this.recentURL.find(entry => entry[0] === url);
+				let len = entry[1];
+				if (len == "default") len = this.DefaultPasswordLength;
+				let type = this.PasswordMethod;
+				let calc = calculatePassword[type];
+				if (!calc) {
+					log("Error: Unknown password-calculation method:",type);
+					return;
+				}
+				let pwd = calc(sec, url, len);
+				this.pwdText.set_text(this.obfuscate(pwd));
+				this.onPasswordConfirmed(url, pwd);
+			} else {
+				this.pwdText.set_text(_("your password"));
+			}
+		}
+
+		obfuscate(text) {
+			let len = text.length;
+			let showcount;
+			if (len <= 8) showcount = 1;
+			else if (len <= 12) showcount = 2;
+			else if (len <= 16) showcount = 3;
+			else showcount = 4;
+			return text.substring(0, showcount) + Array(len + 1 - 2 * showcount).join("\u00B7") + text.substring(len - showcount);
+		}
+
+		addRecentURL(url) {
+			let list = this.recentURL;
+			if (!list.some(entry => entry[0] === url)) {
+				let now = new Date().toISOString();
+				list.push([url, "default", now]);
+				list.sort((a, b) => a[0].localeCompare(b[0]));
+				this.recentURL = list;
+			}
+		}
+
+		copyAndSendNotification(pwd, url) {
+			let clipboard = St.Clipboard.get_default();
+			if (this.CopyToClipboard) {
+				clipboard.set_text(CLIPBOARD_TYPE, pwd);
+				if (this.ShowCopyNotification) showMessage(_("Password copied to clipboard."), url);
+			}
+			if (this.CopyToPrimarySelection) {
+				clipboard.set_text(PRIMARY_TYPE, pwd);
+				if (this.ShowCopyNotification) showMessage(_("Password copied to primary selection."), url);
+			}
+		}
+
+		clear() {
+			this.urlText.set_text("");
+			this.secretText.set_text("");
+			this.pwdText.set_text(_("your password"));
+			this.updateSuggestions();
+		}
+
+		updateSuggestions(list) {
+			this.suggestionsItems.forEach(i => this.menu.box.remove_child(i));
+			this.suggestionsItems = [];
+
+			if (list != null) {
+				list = removeDuplicates(list);
+				const N = Math.min(8, list.length);
+				for (let i = 0; i < N; i++) {
+					const alias = list[i];
+					const item = new SuggestionMenuItem(alias);
+					item.add_style_class_name("pwCalcSuggestion");
+					this.menu.addMenuItem(item, i + 1);
+					item.connect('select', () => { this.urlSelected(alias); });
+					this.suggestionsItems.push(item);
+				}
+			}
+		}
+
+		updateRecentURL() {
+			let list = this.recentURL;
+			list = removeDuplicates(list.map(e => e[0])); // only use alias text for display
+			this.urlCombo.menu.removeAll();
+			for (let i = 0; i < list.length; i++) {
+				let item = new RecentAliasMenuItem(list[i]);
+				this.urlCombo.menu.addMenuItem(item, i);
+				item.connect('select', () => { this.urlSelected(list[i]); });
+			}
+			this.urlCombo.label.set_text(list.length === 0 ? _("No Recent Aliases") : _("Recent Aliases"));
+		}
+		urlSelected(URL) {
+			this.updateSuggestions();
+			this.urlText.set_text(URL);
+			this.secretText.clutter_text.grab_key_focus();
+		}
+		loadConfig() {
+			let self = this;
+			this._settingsC = this.settings.connect("changed::" + RECENT_URL_KEY, function (a, key) {
+				if (self.KeepCopyOfAliasesInFile) {
+					let fn = self.KeepCopyOfAliasesFilename;
+					let json = JSON.stringify(self.recentURL, null, "\t");
+					let success = GLib.file_set_contents(fn, json + "\n");
+					if (success == false) console.error(uuid + ": Unable to write to file " + fn);
+				}
+			});
+		}
+		get recentURL() {
+			var js = this.getString(RECENT_URL_KEY);
+			var arr;
+			try {
+				arr = JSON.parse(js);
+			} catch (e) {
+				arr = [];
+			}
+			return arr.map(entry => Array.isArray(entry) ? entry : [entry, "default", ""])
+		}
+		set recentURL(v) {
+			var json = JSON.stringify(v);
+			if (json !== this.getString(RECENT_URL_KEY)) {
+				this.settings.set_string(RECENT_URL_KEY, json);
+				this.updateRecentURL();
+			}
+		}
+		getBool(key) {
+			return this.settings.get_boolean(key);
+		}
+		getInteger(key) {
+			return this.settings.get_int(key);
+		}
+		getString(key) {
+			return this.settings.get_string(key);
+		}
+		setString(key, value) {
+			return this.settings.set_string(key, value);
+		}
+		get ShowCopyNotification() {
+			return this.getBool(SHOW_COPY_NOTIFICATION_KEY);
+		}
+		get CopyToClipboard() {
+			return this.getBool(COPY_TO_CLIPBOARD_KEY);
+		}
+		get CopyToPrimarySelection() {
+			return this.getBool(COPY_TO_PRIMARY_KEY);
+		}
+		get DefaultPasswordLength() {
+			return this.getInteger(DEFAULT_PASSWORD_LENGTH_KEY);
+		}
+		get LastVersion() {
+			return this.getString(LAST_VERSION_KEY);
+		}
+		set LastVersion(v) {
+			return this.setString(LAST_VERSION_KEY, v);
+		}
+		get PasswordMethod() {
+			return this.getString(PASSWORD_METHOD_KEY);
+		}
+		set PasswordMethod(v) {
+			return this.setString(PASSWORD_METHOD_KEY, v);
+		}
+		get KeepCopyOfAliasesInFile() {
+			return this.getBool(KEEP_COPY_OF_ALIASES_IN_FILE_KEY);
+		}
+		get KeepCopyOfAliasesFilename() {
+			return this.getString(KEEP_COPY_OF_ALIASES_FILENAME_KEY);
+		}
+	});
 
 function removeDuplicates(a) {
 	var b = {};
@@ -361,7 +390,7 @@ function removeDuplicates(a) {
 	return c;
 }
 
-function showMessage(text, url) { 
+function showMessage(text, url) {
 	let source = new MessageTray.Source({
 		title: _('Password Calculator'),
 		iconName: 'dialog-password-symbolic',
@@ -370,7 +399,7 @@ function showMessage(text, url) {
 
 	let notification = new MessageTray.Notification({
 		source: source,
-		title: 'Password for '+url,
+		title: 'Password for ' + url,
 		body: text,
 	});
 	source.addNotification(notification);
@@ -395,15 +424,15 @@ function hex2string(hex) {
 function string2bytearray(str) {
 	var bytes = new Uint8Array(str.length);
 	for (var i = 0; i < str.length; i++) {
-		bytes[i]=str.charCodeAt(i);
+		bytes[i] = str.charCodeAt(i);
 	}
 	return bytes;
 }
 
-function FilledArray(len,value) {
-	var a=new Uint8Array(len);
-	for (var i=0;i<len;i++)
-		a[i]=value;
+function FilledArray(len, value) {
+	var a = new Uint8Array(len);
+	for (var i = 0; i < len; i++)
+		a[i] = value;
 	return a;
 }
 
@@ -419,23 +448,23 @@ function sha1string(text) {
 	return c.get_string();
 }
 
-function uint8array_concat(a,b) {
+function uint8array_concat(a, b) {
 	return new Uint8Array([...a, ...b]);
 }
 
-var calculatePassword={
-	SHA1: function(secret, domain, length) {
-		if (secret==""||domain=="") return "";
+var calculatePassword = {
+	SHA1: function (secret, domain, length) {
+		if (secret == "" || domain == "") return "";
 		var text = secret + domain;
 		var sha1 = sha1bytes(text);
 		var base64 = GLib.base64_encode(sha1);
 		return base64.substring(0, length);
 	},
-	HMAC_SHA1: function(secret, domain, length) {
-		if (secret==""||domain=="") return "";
+	HMAC_SHA1: function (secret, domain, length) {
+		if (secret == "" || domain == "") return "";
 
-		var i_key_b = FilledArray(64,0x36);
-		var o_key_b = FilledArray(64,0x5c);
+		var i_key_b = FilledArray(64, 0x36);
+		var o_key_b = FilledArray(64, 0x5c);
 		var i, j, sha1;
 
 		secret = string2bytearray(Utils.Utf8.encode(secret));
@@ -449,51 +478,51 @@ var calculatePassword={
 			o_key_b[i] ^= secret[i];
 		}
 
-		sha1 = sha1bytes(uint8array_concat(i_key_b,domain));
-		sha1 = sha1bytes(uint8array_concat(o_key_b,sha1));
+		sha1 = sha1bytes(uint8array_concat(i_key_b, domain));
+		sha1 = sha1bytes(uint8array_concat(o_key_b, sha1));
 		var base64 = GLib.base64_encode(sha1);
 		return base64.substring(0, length);
 	},
-	HMAC_SHA1_INEXACT: function(secret, domain, length) {
-		if (secret==""||domain=="") return "";
+	HMAC_SHA1_INEXACT: function (secret, domain, length) {
+		if (secret == "" || domain == "") return "";
 
-		var i_key_b = FilledArray(64,0x36);
-		var o_key_b = FilledArray(64,0x5c);
+		var i_key_b = FilledArray(64, 0x36);
+		var o_key_b = FilledArray(64, 0x5c);
 		var i, j, sha1;
 
 		secret = string2bytearray(Utils.Utf8.encode(secret));
 		domain = string2bytearray(Utils.Utf8.encode(domain));
 
 		if (secret.length > 64)
-			secret = sha1sting(secret);
+			secret = sha1string(secret);
 
 		for (i = 0, j = secret.length; i < j; i += 1) {
 			i_key_b[i] ^= secret[i];
 			o_key_b[i] ^= secret[i];
 		}
-		sha1 = string2bytearray(sha1string(uint8array_concat(i_key_b,domain)));
-		sha1 = sha1bytes(uint8array_concat(o_key_b,sha1));
+		sha1 = string2bytearray(sha1string(uint8array_concat(i_key_b, domain)));
+		sha1 = sha1bytes(uint8array_concat(o_key_b, sha1));
 		var base64 = GLib.base64_encode(sha1);
 		return base64.substring(0, length);
 	}
 };
 
 function error_pw_validation(type, ref, val) {
-	if (ref!=val)
-		console.error(uuid + ": Test "+type+" failed: reference value is "+ref + " but calculated " + val);
+	if (ref != val)
+		console.error(uuid + ": Test " + type + " failed: reference value is " + ref + " but calculated " + val);
 	else
-		console.info(uuid + ": Test "+type+" success.");
+		console.info(uuid + ": Test " + type + " success.");
 }
 
 function validate_pw_calculation() {
 	let sha1_ref = "pFWU9V+5Ns6ie+4F";
 	let hmac_sha1_ref = "p2FCQnf42dGKh5JU";
 	let hmac_sha1_inexact_ref = "gT7nAfjjcnOQDUIc";
-	let sha1_val = calculatePassword.SHA1("secret","domain",16);
-	let hmac_sha1_val = calculatePassword.HMAC_SHA1("secret","domain",16);
-	let hmac_sha1_inexact_val = calculatePassword.HMAC_SHA1_INEXACT("secret","domain",16);
-	error_pw_validation("SHA1", sha1_ref,sha1_val);
-	error_pw_validation("HMAC_SHA1", hmac_sha1_ref,  hmac_sha1_val);
+	let sha1_val = calculatePassword.SHA1("secret", "domain", 16);
+	let hmac_sha1_val = calculatePassword.HMAC_SHA1("secret", "domain", 16);
+	let hmac_sha1_inexact_val = calculatePassword.HMAC_SHA1_INEXACT("secret", "domain", 16);
+	error_pw_validation("SHA1", sha1_ref, sha1_val);
+	error_pw_validation("HMAC_SHA1", hmac_sha1_ref, hmac_sha1_val);
 	error_pw_validation("HMAC_SHA1_INEXACT", hmac_sha1_inexact_ref, hmac_sha1_inexact_val);
 }
 
