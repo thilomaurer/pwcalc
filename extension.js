@@ -1,4 +1,4 @@
-const version = "1.1.7";
+const version = "1.2.0";
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
