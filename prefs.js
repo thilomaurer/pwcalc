@@ -28,6 +28,7 @@
 import Gdk from 'gi://Gdk';
 import Gtk from 'gi://Gtk';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
 const RECENT_URL_KEY = 'recenturls';
@@ -353,18 +354,15 @@ export default class pwcalcExtensionPreferences extends ExtensionPreferences {
 
             try {
               const content = JSON.stringify(data, null, 2);
-              const success = GLib.file_set_contents(path, content + "\n");
-              if (!success)
-                log("Export failed: could not write file " + path);
+              GLib.file_set_contents(path, content + "\n");
             } catch (e) {
-              log("Export failed: " + e.message);
+              log(`Export failed: ${e.message}`);
             }
           }
         }
 
         dlg.destroy();
       });
-
       dialog.show();
     });
 
