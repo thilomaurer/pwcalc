@@ -123,12 +123,12 @@ let PasswordCalculator = GObject.registerClass(
 			});
 
 			this.secretText.clutter_text.connect('text-changed', function (o, e) {
-				self.secretChanged.apply(self, [o, e]);
+				self.updatePasswordDisplay();
 			});
 
 			this.secretText.clutter_text.connect('key-press-event', function (o, e) {
 				if (e.get_key_symbol() === Clutter.KEY_Return) {
-					self.generatePassword(o, e);
+					self.handoverPassword();
 					return Clutter.EVENT_STOP;
 				}
 				return Clutter.EVENT_PROPAGATE;
@@ -158,13 +158,6 @@ let PasswordCalculator = GObject.registerClass(
 				if (!open) self.urlText.clutter_text.grab_key_focus();
 			});
 		}
-		secretChanged(o, e) {
-			let st = this.secretText;
-			let sec = st.get_text();
-			let pwc = '';
-			if (sec != "") pwc = '\u25cf'; // ● U+25CF BLACK CIRCLE
-			st.clutter_text.set_password_char(pwc);
-		}
 
 		compat_password_method() {
 			let type = this.PasswordMethod;
@@ -184,6 +177,7 @@ let PasswordCalculator = GObject.registerClass(
 		}
 
 		urlChanged(o, e) {
+			this.updatePasswordDisplay();
 			const typed = this.urlText.get_text();
 			let urls = this.recentURL
 				.filter(entry => Array.isArray(entry) && typeof entry[0] === 'string')
@@ -204,9 +198,12 @@ let PasswordCalculator = GObject.registerClass(
 			return Clutter.EVENT_PROPAGATE;
 		}
 
-		onPasswordConfirmed(url, pwd) {
-			this.copyAndSendNotification(pwd, url);
+		handoverPassword() {
+			let url = this.urlText.get_text().trim();
 			this.addRecentURL(url);
+			let pwd = this.generatePassword();
+			if (pwd)
+				this.copyAndSendNotification(pwd, url);
 			global.stage.set_key_focus(null);
 			GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
 				this.menu.close();
@@ -214,13 +211,24 @@ let PasswordCalculator = GObject.registerClass(
 			});
 		}
 
+		updatePasswordDisplay() {
+			let pwd = this.generatePassword();
+			let txt = _("your password");
+			if (pwd)
+				txt = this.obfuscate(pwd)
+			this.pwdText.set_text(txt);
+		}
+
 		generatePassword() {
 			let url = this.urlText.get_text().trim();
 			let sec = this.secretText.get_text().trim();
 			if (url && sec) {
+				let len = this.DefaultPasswordLength;
 				let entry = this.recentURL.find(entry => entry[0] === url);
-				let len = entry[1];
-				if (len == "default") len = this.DefaultPasswordLength;
+				if (entry) {
+					let len = entry[1];
+					if (len == "default") len = this.DefaultPasswordLength;
+				}
 				let type = this.PasswordMethod;
 				let calc = calculatePassword[type];
 				if (!calc) {
@@ -228,11 +236,9 @@ let PasswordCalculator = GObject.registerClass(
 					return;
 				}
 				let pwd = calc(sec, url, len);
-				this.pwdText.set_text(this.obfuscate(pwd));
-				this.onPasswordConfirmed(url, pwd);
-			} else {
-				this.pwdText.set_text(_("your password"));
-			}
+				return pwd;
+			} else
+				return null;
 		}
 
 		obfuscate(text) {
@@ -280,7 +286,7 @@ let PasswordCalculator = GObject.registerClass(
 
 			if (list != null) {
 				list = removeDuplicates(list);
-				const N = Math.min(8, list.length);
+				let N = Math.min(16, list.length);
 				for (let i = 0; i < N; i++) {
 					const alias = list[i];
 					const item = new SuggestionMenuItem(alias);
